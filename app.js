@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const path = require('path');
 const express = require('express');
+const sql = require('./db');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -56,6 +57,25 @@ const authRoutes = require('./routes/authRoutes');
 app.use('/api/patients', patientRoutes);
 app.use('/api/auth', authRoutes);
 
+// Route de test de connexion à la base de données
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const result = await sql`SELECT NOW() as current_time, version() as pg_version`;
+    res.json({ 
+      success: true, 
+      message: 'Connexion à la base de données réussie!',
+      data: result[0]
+    });
+  } catch (error) {
+    console.error('Erreur de connexion à la base de données:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erreur de connexion à la base de données',
+      details: error.message 
+    });
+  }
+});
+
 // 404 fallback
 app.use((req, res) => {
   if (req.accepts('html')) {
@@ -64,4 +84,17 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-app.listen(port, () => console.log(`Serveur démarré sur http://localhost:${port}`));
+app.listen(port, async () => {
+  console.log(`Serveur démarré sur http://localhost:${port}`);
+  console.log(`DATABASE_URL configurée: ${process.env.DATABASE_URL ? '✅' : '❌'}`);
+  
+  // Test de connexion à la base de données au démarrage
+  try {
+    const result = await sql`SELECT 1 as test, current_database() as db_name`;
+    console.log('✅ Connexion à Supabase PostgreSQL établie avec succès!');
+    console.log(`   Base de données: ${result[0].db_name}`);
+  } catch (error) {
+    console.error('❌ Erreur de connexion à Supabase:', error.message);
+    console.error('   Vérifiez votre DATABASE_URL dans le fichier .env');
+  }
+});
