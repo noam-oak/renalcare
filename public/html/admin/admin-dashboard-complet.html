@@ -772,8 +772,16 @@
         // Logout function
         function logout() {
             if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                alert('Déconnexion réussie. Redirection vers la page de connexion...');
-                // Redirect to login page
+                // Nettoyer le localStorage
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_id');
+                localStorage.removeItem('user_email');
+                localStorage.removeItem('user_role');
+                localStorage.removeItem('user_name');
+                localStorage.removeItem('user_profile');
+                
+                // Rediriger vers la page de login
+                window.location.href = '/login';
             }
         }
 
@@ -787,6 +795,16 @@
             document.getElementById('createUserForm').reset();
         }
 
+        // Generate random password
+        function generatePassword() {
+            return Math.random().toString(36).slice(-8);
+        }
+
+        // Generate random security number
+        function generateSecurityNumber() {
+            return Array.from({ length: 15 }, () => Math.floor(Math.random() * 10)).join('');
+        }
+
         // Create user function
         function createUser(event) {
             event.preventDefault();
@@ -795,16 +813,54 @@
             const nom = document.getElementById('userNom').value;
             const prenom = document.getElementById('userPrenom').value;
             const email = document.getElementById('userEmail').value;
+            const telephone = document.getElementById('userTelephone').value;
             const sendCredentials = document.getElementById('sendCredentials').checked;
 
-            const message = `Utilisateur créé avec succès !\n\n` +
-                `Type: ${userType === 'patient' ? 'Patient' : 'Médecin'}\n` +
-                `Nom: ${nom} ${prenom}\n` +
-                `Email: ${email}\n\n` +
-                (sendCredentials ? '✉️ Les identifiants ont été envoyés par email.' : '📋 Les identifiants doivent être communiqués manuellement.');
+            // Génération automatique
+            const securite_sociale = generateSecurityNumber();
+            const password = generatePassword();
 
-            alert(message);
-            closeCreateUserModal();
+            // Validation
+            if (!userType || !nom || !prenom || !email || !telephone) {
+                alert('Tous les champs sont obligatoires.');
+                return;
+            }
+
+            // Envoi de la requête API
+            fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                    securite_sociale: securite_sociale,
+                    role: userType,
+                    telephone: telephone
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`✓ Utilisateur créé avec succès !\n\n` +
+                        `Nom: ${nom} ${prenom}\n` +
+                        `Email: ${email}\n` +
+                        `Rôle: ${userType}\n` +
+                        `Mot de passe: ${password}\n` +
+                        `N° Sécurité Sociale: ${securite_sociale}\n\n` +
+                        (sendCredentials ? '✉️ Les identifiants ont été envoyés par email.' : '📋 Les identifiants doivent être communiqués manuellement.'));
+                    closeCreateUserModal();
+                    // Rafraîchir la page pour voir le nouvel utilisateur
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert('❌ Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('❌ Une erreur est survenue lors de la création du compte.');
+            });
         }
 
         // View user function

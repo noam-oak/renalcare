@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion Médecin - Suivi Greffe Rénale</title>
+    <title>Connexion - Suivi Greffe Rénale</title>
     <style>
         * {
             margin: 0;
@@ -34,7 +34,7 @@
         }
 
         .left-section {
-            background: linear-gradient(135deg, #8e44ad 0%, #c0392b 100%);
+            background: linear-gradient(135deg, #52c382 0%, #45b8ac 100%);
             padding: 60px 40px;
             display: flex;
             flex-direction: column;
@@ -98,8 +98,8 @@
 
         input:focus {
             outline: none;
-            border-color: #8e44ad;
-            box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.1);
+            border-color: #52c382;
+            box-shadow: 0 0 0 3px rgba(82, 195, 130, 0.1);
         }
 
         .remember-forgot {
@@ -116,7 +116,7 @@
         }
 
         .remember-forgot a {
-            color: #8e44ad;
+            color: #52c382;
             text-decoration: none;
         }
 
@@ -127,7 +127,7 @@
         .btn-login {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #8e44ad 0%, #c0392b 100%);
+            background: linear-gradient(135deg, #52c382 0%, #45b8ac 100%);
             color: white;
             border: none;
             border-radius: 8px;
@@ -139,21 +139,16 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(142, 68, 173, 0.4);
+            box-shadow: 0 10px 25px rgba(82, 195, 130, 0.4);
         }
 
         .btn-login:active {
             transform: translateY(0);
         }
 
-        .role-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-bottom: 20px;
-            font-weight: 600;
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
 
         .help-text {
@@ -164,13 +159,37 @@
         }
 
         .help-text a {
-            color: #8e44ad;
+            color: #52c382;
             text-decoration: none;
             font-weight: 600;
         }
 
         .help-text a:hover {
             text-decoration: underline;
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #52c382;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
         }
 
         @media (max-width: 768px) {
@@ -192,26 +211,26 @@
 <body>
     <div class="container">
         <div class="left-section">
-            <div class="icon">⚕️</div>
-            <div class="role-badge">ESPACE MÉDECIN</div>
-            <h1>Plateforme Médicale</h1>
-            <p>Accédez à votre espace médecin pour gérer vos patients greffés rénaux. Consultez les données de suivi,
-                planifiez les rendez-vous et communiquez avec vos patients.</p>
+            <div class="icon">🏥</div>
+            <h1>Suivi Greffe Rénale</h1>
+            <p>Plateforme sécurisée de suivi médical pour patients, médecins et administrateurs. Accédez à votre espace personnel avec vos identifiants.</p>
         </div>
 
         <div class="right-section">
-            <h2>Connexion Médecin</h2>
-            <p class="subtitle">Accédez à votre tableau de bord médical</p>
+            <h2>Connexion</h2>
+            <p class="subtitle">Connectez-vous à votre compte</p>
 
-            <form id="medecinLoginForm">
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="loginForm">
                 <div class="form-group">
-                    <label for="email">Adresse Email Professionnelle *</label>
-                    <input type="email" id="email" name="email" placeholder="dr.nom@hopital.fr" required>
+                    <label for="email">Adresse Email *</label>
+                    <input type="email" id="email" name="email" placeholder="votre.email@exemple.fr" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="immatricule">Numéro d'Immatriculation *</label>
-                    <input type="text" id="immatricule" name="immatricule" placeholder="RPPS 12345678901" required>
+                    <label for="numSecu">Numéro de Sécurité Sociale *</label>
+                    <input type="text" id="numSecu" name="numSecu" placeholder="1 85 12 75 123 456 78" maxlength="15">
                 </div>
 
                 <div class="form-group">
@@ -223,32 +242,23 @@
                     <label>
                         <input type="checkbox" name="remember"> Se souvenir de moi
                     </label>
-                    <a href="/medecin/mdp_oubli">Mot de passe oublié ?</a>
+                    <a href="/mdp_oubli">Mot de passe oublié ?</a>
                 </div>
-                <a href="/medecin/dashboard" >dashboard tempo</a> <!--get nav to dashboard-->
+
                 <button type="submit" class="btn-login">Se connecter</button>
 
                 <div class="help-text">
-                    Pas encore inscrit ? <a href="/medecin/contact">Créer un compte médecin</a>
+                    Besoin d'aide ? <a href="/contact">Contactez le support</a>
+                </div>
+
+                <div class="info-box">
+                    ℹ️ <strong>Sécurité :</strong> Ne partagez jamais vos identifiants. Notre plateforme utilise un chiffrement sécurisé.
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
-        document.getElementById('medecinLoginForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const formData = {
-                email: document.getElementById('email').value,
-                immatricule: document.getElementById('immatricule').value,
-                password: document.getElementById('password').value
-            };
-
-            console.log('Tentative de connexion Médecin:', formData);
-            alert('Connexion réussie ! Redirection vers votre tableau de bord médical...');
-        });
-    </script>
+    <script src="/js/login.js"></script>
 </body>
 
 </html>

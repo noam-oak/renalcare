@@ -6,7 +6,7 @@ Prérequis
 - Node.js (version recommandée >= 14)
 
 Installation
-1. Ouvrir un terminal à la racine du projet (le dossier qui contient `server.js` et `package.json`).
+1. Ouvrir un terminal à la racine du projet (le dossier qui contient `app.js` et `package.json`).
 2. Installer les dépendances :
 
    npm install
@@ -14,7 +14,9 @@ Installation
 Lancer le serveur
 - Démarrer le serveur :
 
-   npm start
+   npm run dev 
+   ou
+   npm run
 
 Le serveur écoute par défaut sur le port 3000. Points d'accès utiles :
 - Pages statiques (servies depuis `Pages site web`)
