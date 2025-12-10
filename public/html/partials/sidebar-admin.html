@@ -69,10 +69,25 @@
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" onclick="logout()" data-nav="logout">
+      <a class="nav-link" onclick="logout()" style="cursor: pointer;" data-nav="logout">
         <span class="icon">🚪</span>
         <span>Déconnexion</span>
       </a>
     </li>
   </ul>
+
+  <script>
+    function logout() {
+      // Nettoyer le localStorage
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_id');
+      localStorage.removeItem('user_email');
+      localStorage.removeItem('user_role');
+      localStorage.removeItem('user_name');
+      localStorage.removeItem('user_profile');
+      
+      // Rediriger vers la page de login
+      window.location.href = '/login';
+    }
+  </script>
 </aside>

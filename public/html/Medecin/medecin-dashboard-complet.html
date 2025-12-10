@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Médecin - Suivi Greffe Rénale</title>
     <script src="/js/sidebar.js" defer></script>
+    <script src="/js/medecin-dashboard.js" defer></script>
     <style>
         * {
     margin: 0;
@@ -668,7 +669,7 @@ body {
             <!-- Header -->
             <header class="header">
                 <div class="header-left">
-                    <h1 id="pageTitle">Bonjour, Dr. Martin</h1>
+                    <h1 id="pageTitle">Chargement...</h1>
                     <p id="pageSubtitle">Voici un aperçu de votre journée</p>
                 </div>
                 <div class="header-right">
@@ -1616,8 +1617,13 @@ body {
             const navLink = document.querySelector(`[data-page="${page}"]`);
             if (navLink) navLink.classList.add('active');
 
+            // Récupérer le nom du médecin depuis localStorage
+            const userName = localStorage.getItem('user_name');
+            const nameParts = userName ? userName.split(' ') : ['Médecin'];
+            const nom = nameParts.slice(1).join(' ') || nameParts[0];
+            
             const titles = {
-                'dashboard': ['Bonjour, Dr. Martin', 'Voici un aperçu de votre journée'],
+                'dashboard': [`Bonjour, Dr. ${nom}`, 'Voici un aperçu de votre journée'],
                 'patients': ['Liste des Patients', 'Tous vos patients triés par priorité'],
                 'gestion': ['Gestion des Patients', 'Ajouter ou modifier les informations patients'],
                 'suivi': ['Suivi des Données', 'Constantes, symptômes et traitements'],

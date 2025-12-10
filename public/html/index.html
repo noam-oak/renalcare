@@ -138,6 +138,7 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             backdrop-filter: blur(10px);
+            text-align: center;
         }
 
         .role-selector h2 {
@@ -154,9 +155,9 @@
 
         .role-buttons {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 40px;
-            max-width: 700px;
+            max-width: 300px;
             margin: 0 auto;
         }
 
@@ -293,20 +294,14 @@
     </section>
 
     <section class="role-selector" id="about">
-        <h2>Comment accéder à la plateforme ?</h2>
-        <p>Sélectionnez votre profil pour accéder à votre espace</p>
+        <h2>Accéder à la plateforme</h2>
+        <p>Connectez-vous pour accéder à votre espace personnalisé</p>
 
         <div class="role-buttons">
-            <a href="patient/login" class="role-button patient">
-                <div class="role-icon">👤</div>
-                <h3>Espace Patient</h3>
-                <p>Accédez à votre suivi personnel et communiquez avec votre équipe</p>
-            </a>
-
-            <a href="medecin/login" class="role-button medecin">
-                <div class="role-icon">👨‍⚕️</div>
-                <h3>Espace Médecin</h3>
-                <p>Gérez vos patients et suivez leur évolution médicale</p>
+            <a href="/login" class="role-button patient">
+                <div class="role-icon">🔐</div>
+                <h3>Se Connecter</h3>
+                <p>Connectez-vous à votre compte pour accéder à votre espace</p>
             </a>
         </div>
     </section>

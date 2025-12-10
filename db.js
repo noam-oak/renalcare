@@ -10,9 +10,10 @@ const sql = postgres(connectionString, {
   max_lifetime: 60 * 30,
   max: 10,
   onnotice: () => {}, // Supprime les warnings PostgreSQL
-  // Force l'utilisation de la famille d'adresses IPv6
+  // Force IPv4
   connection: {
-    application_name: 'renalcare_app'
+    application_name: 'renalcare_app',
+    family: 4  // Force IPv4
   }
 });
 

@@ -367,13 +367,13 @@
                             <input type="tel" name="telephone" placeholder="06 12 34 56 78" required>
                         </div>
                         <div class="form-group">
-                            <label>N° d'Immatriculation RPPS <span class="required">*</span></label>
-                            <input type="text" name="immatricule" placeholder="12345678901" maxlength="11" required>
+                            <label>Numéro de Sécurité Sociale <span class="required">*</span></label>
+                            <input type="text" name="securite_sociale" id="numSecu" placeholder="1 85 12 75 123 456 78" required>
                         </div>
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn btn-primary" onclick="nextStep()">Suivant</button>
+                        <button type="button" class="btn btn-primary" onclick="skipToPasswordStep()">Suivant</button>
                     </div>
                 </div>
 
@@ -416,7 +416,7 @@
 
                     <div class="form-group">
                         <label>Mot de passe <span class="required">*</span></label>
-                        <input type="password" name="password" id="password" placeholder="Minimum 8 caractères" required>
+                        <input type="password" name="password" id="password" placeholder="Minimum 6 caractères" required minlength="6">
                     </div>
 
                     <div class="form-group">
@@ -425,15 +425,12 @@
                     </div>
 
                     <div class="password-requirements">
-                        <div id="req-length">🔹 Au moins 8 caractères</div>
-                        <div id="req-uppercase">🔹 Au moins une majuscule</div>
-                        <div id="req-lowercase">🔹 Au moins une minuscule</div>
-                        <div id="req-number">🔹 Au moins un chiffre</div>
+                        <div id="req-length">🔹 Au moins 6 caractères</div>
                         <div id="req-match">🔹 Les mots de passe correspondent</div>
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn btn-secondary" onclick="prevStep()">Retour</button>
+                        <button type="button" class="btn btn-secondary" onclick="backToStep1()">Retour</button>
                         <button type="button" class="btn btn-primary" id="btnNextPassword" onclick="validatePasswordAndNext()">Suivant</button>
                     </div>
                 </div>
@@ -524,9 +521,27 @@
         function prevStep() {
             if (currentStep > 1) {
                 currentStep--;
+                // Sauter l'étape 2 (vérification) en revenant en arrière
+                if (currentStep === 2) {
+                    currentStep = 1;
+                }
                 updateProgress();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+        }
+
+        function skipToPasswordStep() {
+            // Sauter l'étape 2 (vérification email) et aller directement à l'étape 3 (mot de passe)
+            currentStep = 3;
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function backToStep1() {
+            // Revenir directement à l'étape 1 depuis l'étape 3
+            currentStep = 1;
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // Validation du mot de passe en temps réel
@@ -537,25 +552,16 @@
             const password = passwordInput.value;
             const passwordConfirm = passwordConfirmInput.value;
 
-            const hasLength = password.length >= 8;
-            const hasUppercase = /[A-Z]/.test(password);
-            const hasLowercase = /[a-z]/.test(password);
-            const hasNumber = /\d/.test(password);
+            const hasLength = password.length >= 6;
             const passwordsMatch = password === passwordConfirm && password.length > 0;
 
             // Mise à jour visuelle des exigences
             document.getElementById('req-length').className = hasLength ? 'valid' : 'invalid';
-            document.getElementById('req-uppercase').className = hasUppercase ? 'valid' : 'invalid';
-            document.getElementById('req-lowercase').className = hasLowercase ? 'valid' : 'invalid';
-            document.getElementById('req-number').className = hasNumber ? 'valid' : 'invalid';
             document.getElementById('req-match').className = passwordsMatch ? 'valid' : 'invalid';
 
             return {
-                isValid: hasLength && hasUppercase && hasLowercase && hasNumber && passwordsMatch,
+                isValid: hasLength && passwordsMatch,
                 hasLength,
-                hasUppercase,
-                hasLowercase,
-                hasNumber,
                 passwordsMatch
             };
         }
@@ -570,10 +576,7 @@
 
             if (!validation.isValid) {
                 let errors = [];
-                if (!validation.hasLength) errors.push('au moins 8 caractères');
-                if (!validation.hasUppercase) errors.push('une majuscule');
-                if (!validation.hasLowercase) errors.push('une minuscule');
-                if (!validation.hasNumber) errors.push('un chiffre');
+                if (!validation.hasLength) errors.push('au moins 6 caractères');
                 if (!validation.passwordsMatch && passwordConfirmInput.value) errors.push('les mots de passe doivent être identiques');
 
                 errorMessage.textContent = 'Le mot de passe doit contenir ' + errors.join(', ') + '.';
@@ -609,20 +612,111 @@
         });
 
         // Soumission du formulaire
-        document.getElementById('inscriptionForm').addEventListener('submit', function(e) {
+        // Formatage du numéro de sécurité sociale
+        const numSecuInput = document.getElementById('numSecu');
+        if (numSecuInput) {
+            numSecuInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s/g, '');
+                if (value.length > 30) value = value.substr(0, 30);
+                
+                let formatted = value.match(/.{1,1}/g);
+                if (formatted) {
+                    e.target.value = formatted.join(' ').substr(0, 60);
+                }
+            });
+        }
+
+        // Formatage du téléphone
+        const telephoneInput = document.querySelector('input[name="telephone"]');
+        if (telephoneInput) {
+            telephoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s/g, '');
+                let formatted = '';
+                
+                for (let i = 0; i < value.length && i < 10; i++) {
+                    if (i > 0 && i % 2 === 0) {
+                        formatted += ' ';
+                    }
+                    formatted += value[i];
+                }
+                
+                e.target.value = formatted;
+            });
+        }
+
+        document.getElementById('inscriptionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Collecter TOUTES les données du formulaire
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
-            
-            console.log('Données d\'inscription médecin:', data);
-            
-            currentStep = 5;
-            updateProgress();
-            
-            setTimeout(() => {
-                alert('Redirection vers la page de connexion...');
-            }, 3000);
+
+            // Récupérer les valeurs des champs
+            const email = data.email ? data.email.trim() : '';
+            const password = data.password ? data.password.trim() : '';
+            const securite_sociale = data.securite_sociale ? data.securite_sociale.replace(/\s/g, '') : '';
+            const nom = data.nom ? data.nom.trim() : '';
+            const prenom = data.prenom ? data.prenom.trim() : '';
+            const telephone = data.telephone ? data.telephone.replace(/\s/g, '') : '';
+            const adresse = data.adresse_hopital ? data.adresse_hopital.trim() : 'À compléter';
+
+            // Validation des champs obligatoires
+            if (!email || !password || !securite_sociale || !nom || !prenom || !telephone) {
+                alert('❌ Tous les champs obligatoires doivent être remplis (email, mot de passe, numéro de sécurité sociale, nom, prénom, téléphone)');
+                return;
+            }
+
+            // Validation du mot de passe minimum 6 caractères
+            if (password.length < 6) {
+                alert('❌ Le mot de passe doit contenir au moins 6 caractères');
+                return;
+            }
+
+            // Désactiver le bouton de soumission
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Création en cours...';
+
+            try {
+                const response = await fetch('/api/auth/medecin/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        securite_sociale: securite_sociale,
+                        nom: nom,
+                        prenom: prenom,
+                        telephone: telephone,
+                        adresse: adresse
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Afficher l'étape de confirmation
+                    currentStep = 5;
+                    updateProgress();
+                    
+                    // Redirection après 2 secondes
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    alert('❌ Erreur: ' + (result.error || 'Une erreur est survenue lors de l\'inscription'));
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('❌ Impossible de contacter le serveur. Vérifiez votre connexion.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         });
     </script>
 </body>

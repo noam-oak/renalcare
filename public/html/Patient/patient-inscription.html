@@ -405,7 +405,7 @@
 
                     <div class="form-group">
                         <label>Numéro de Sécurité Sociale <span class="required">*</span></label>
-                        <input type="text" name="num_secu" placeholder="1 85 12 75 123 456 78" maxlength="21" required>
+                        <input type="text" name="num_secu" placeholder="1 85 12 75 123 456 78" required>
                     </div>
 
                     <div class="btn-group">
@@ -543,21 +543,50 @@
 
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary" onclick="prevStep()">Retour</button>
-                        <button type="submit" class="btn btn-primary">Créer mon compte</button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep()">Créer mon compte</button>
                     </div>
                 </div>
 
                 <!-- Confirmation -->
                 <div class="form-section" data-section="5">
+                    <h2 class="section-title">Complétez vos informations</h2>
+                    <p class="section-subtitle">Finalisez votre profil avant de vous connecter</p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nom <span class="required">*</span></label>
+                            <input type="text" name="nom" placeholder="Votre nom de famille" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Prénom <span class="required">*</span></label>
+                            <input type="text" name="prenom" placeholder="Votre prénom" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Téléphone <span class="required">*</span></label>
+                        <input type="tel" name="telephone" placeholder="06 XX XX XX XX" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Adresse complète <span class="required">*</span></label>
+                        <textarea name="adresse" placeholder="Numéro, rue, code postal, ville" required></textarea>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">Retour</button>
+                        <button type="button" class="btn btn-primary" onclick="completeInscription()">Terminer l'inscription</button>
+                    </div>
+                </div>
+
+                <!-- Succès -->
+                <div class="form-section" data-section="6">
                     <div class="success-box">
-                        <h3>✅ Demande d'inscription envoyée !</h3>
-                        <p style="margin: 15px 0;">Votre demande d'inscription a été transmise à l'équipe administrative. Vous recevrez un email de confirmation une fois votre compte validé.</p>
+                        <h3>✅ Inscription réussie !</h3>
+                        <p style="margin: 15px 0;">Votre compte a été créé avec succès. Vous allez être redirigé vers la page de connexion.</p>
                         <p style="font-size: 14px; color: #666; margin-top: 15px;">
-                            Cela peut prendre 24 à 48 heures. En cas de question, contactez votre service.
+                            Vous pourrez maintenant vous connecter avec vos identifiants.
                         </p>
-                        <button type="button" class="btn btn-primary" style="margin-top: 20px;" onclick="window.location.href='#'">
-                            Retour à l'accueil
-                        </button>
                     </div>
                 </div>
             </form>
@@ -686,11 +715,11 @@
         if (numSecuInput) {
             numSecuInput.addEventListener('input', function(e) {
                 let value = e.target.value.replace(/\s/g, '');
-                if (value.length > 15) value = value.substr(0, 15);
+                if (value.length > 30) value = value.substr(0, 30);
                 
                 let formatted = value.match(/.{1,1}/g);
                 if (formatted) {
-                    e.target.value = formatted.join(' ').substr(0, 21);
+                    e.target.value = formatted.join(' ').substr(0, 60);
                 }
             });
         }
@@ -707,6 +736,53 @@
             currentStep = 5;
             updateProgress();
         });
+
+        // Fonction pour compléter l'inscription et appeler l'API
+        function completeInscription() {
+            const formData = new FormData(document.getElementById('inscriptionForm'));
+            const data = Object.fromEntries(formData);
+
+            // Validation des champs obligatoires
+            if (!data.email || !data.password || !data.num_secu || !data.nom || !data.prenom || !data.telephone || !data.adresse) {
+                alert('Tous les champs sont obligatoires');
+                return;
+            }
+
+            // Appel à l'API pour créer/mettre à jour le compte
+            fetch('/api/auth/patient/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: data.email,
+                    password: data.password,
+                    securite_sociale: data.num_secu,
+                    nom: data.nom,
+                    prenom: data.prenom,
+                    telephone: data.telephone,
+                    adresse: data.adresse
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentStep = 6;
+                    updateProgress();
+                    
+                    // Rediriger vers la connexion après 2 secondes
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    alert('❌ Erreur: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('❌ Une erreur est survenue lors de l\'inscription');
+            });
+        }
     </script>
 </body>
 </html>

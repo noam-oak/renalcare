@@ -1,4 +1,4 @@
-// running the server with this command: npm run dev
+//running ther server with this command: npm run dev
 require('dotenv').config();
 
 const path = require('path');
@@ -7,15 +7,7 @@ const sql = require('./db');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 🔹 Import des routes API AVANT de les utiliser
-const patientRoutes = require('./routes/patientRoutes');
-const authRoutes = require('./routes/authRoutes_improved');
-const adminRoutes = require('./routes/adminRoutes');
-const contactRoutes = require('./routes/contactRoutes');
-const registrationRoutes = require('./routes/registrationRoutes');
-
-
-// Dossier public (HTML, CSS, JS statiques)
+// Dossier HTML
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir));
 
@@ -35,7 +27,7 @@ const htmlRoutes = [
   { paths: ['/admin/login'], file: 'admin/admin-login.html' },
   { paths: ['/medecin/dashboard'], file: 'Medecin/medecin-dashboard-complet.html' },
   { paths: ['/medecin/login'], file: 'Medecin/medecin-login.html' },
-  { paths: ['/medecin/inscription'], file: 'Medecin/medecin-inscription.html' },
+  { paths: ['/medecin/register'], file: 'Medecin/medecin-inscription.html' },
   { paths: ['/patient/dashboard'], file: 'Patient/patient-dashboard.html' },
   { paths: ['/patient/login'], file: 'Patient/patient-login.html' },
   { paths: ['/patient/register'], file: 'Patient/patient-inscription.html' },
@@ -59,29 +51,29 @@ htmlRoutes.forEach(({ paths, file }) => {
   paths.forEach((routePath) => app.get(routePath, serveHtml(file)));
 });
 
-// 🔹 Routes API
+
+// Routes API
+const patientRoutes = require('./routes/patientRoutes');
+const authRoutes = require('./routes/authRoutes_improved');
+
 app.use('/api/patients', patientRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/register', registrationRoutes);
-
 
 // Route de test de connexion à la base de données
 app.get('/api/test-db', async (req, res) => {
   try {
     const result = await sql`SELECT NOW() as current_time, version() as pg_version`;
-    res.json({
-      success: true,
+    res.json({ 
+      success: true, 
       message: 'Connexion à la base de données réussie!',
       data: result[0]
     });
   } catch (error) {
     console.error('Erreur de connexion à la base de données:', error);
-    res.status(500).json({
-      success: false,
+    res.status(500).json({ 
+      success: false, 
       error: 'Erreur de connexion à la base de données',
-      details: error.message
+      details: error.message 
     });
   }
 });
@@ -94,11 +86,10 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// 🔹 Démarrage du serveur APRÈS la déclaration des routes
 app.listen(port, async () => {
   console.log(`Serveur démarré sur http://localhost:${port}`);
   console.log(`DATABASE_URL configurée: ${process.env.DATABASE_URL ? '✅' : '❌'}`);
-
+  
   // Test de connexion à la base de données au démarrage
   try {
     const result = await sql`SELECT 1 as test, current_database() as db_name`;
