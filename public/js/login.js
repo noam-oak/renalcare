@@ -4,22 +4,16 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
-  const numSecu = document.getElementById('numSecu').value.trim();
   const errorDiv = document.getElementById('errorMessage');
 
   // Validation
-  if (!email || !password || !numSecu) {
-    showError('Email, mot de passe et numéro de sécurité sociale sont obligatoires');
+  if (!email || !password) {
+    showError('Email et mot de passe sont obligatoires');
     return;
   }
 
   if (password.length < 3) {
     showError('Le mot de passe doit contenir au moins 3 caractères');
-    return;
-  }
-
-  if (numSecu.length < 5) {
-    showError('Le numéro de sécurité sociale semble invalide');
     return;
   }
 
@@ -39,7 +33,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       body: JSON.stringify({
         email,
         password,
-        securite_sociale: numSecu ? parseInt(numSecu) : null,
       }),
     });
 
@@ -61,7 +54,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 
     // Redirection basée sur le rôle
-    const role = data.user.role;
+    const role = data.user.role.toLowerCase();
     let redirectUrl = '/';
 
     if (role === 'patient') {

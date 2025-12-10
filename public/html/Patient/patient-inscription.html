@@ -631,7 +631,7 @@
                 registrationData.email = email;
                 registrationData.telephone = document.querySelector('input[name="telephone"]')?.value?.trim();
                 registrationData.date_greffe = document.querySelector('input[name="date_greffe"]')?.value;
-                registrationData.num_secu = document.querySelector('input[name="num_secu"]')?.value?.trim();
+                registrationData.securite_sociale = document.querySelector('input[name="num_secu"]')?.value?.trim();
 
                 try {
                     const res = await fetch('/api/register/send-code', {

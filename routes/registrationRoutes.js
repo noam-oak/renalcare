@@ -1,6 +1,8 @@
 // routes/registrationRoutes.js
 const express = require('express');
 const router = express.Router();
+const sql = require('../db');
+const bcrypt = require('bcrypt');
 
 const { sendOtpEmail } = require('../services/mailService');
 
@@ -78,6 +80,104 @@ router.post('/verify-code', (req, res) => {
   // OK : code bon
   console.log(`[REGISTER] OTP validé pour ${email}`);
   return res.json({ success: true, role: entry.role });
+});
+
+/**
+ * POST /api/register/complete
+ * Finalise l'inscription en mettant à jour l'utilisateur pré-créé
+ */
+router.post('/complete', async (req, res) => {
+  const { 
+    email, password, nom, prenom, telephone, adresse, role,
+    specialite, numero_licence, grade, adresse_hopital,
+    securite_sociale, date_greffe, maladie, groupe_sanguin, poids, taille, allergies, genre, date_naissance
+  } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ success: false, error: 'Email et mot de passe requis.' });
+  }
+
+  try {
+    // 1. Vérifier si l'utilisateur existe (pré-créé par l'admin)
+    const existingUsers = await sql`SELECT * FROM utilisateur WHERE email = ${email}`;
+
+    if (existingUsers.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "Aucun compte pré-enregistré trouvé pour cet email. Veuillez contacter l'administrateur." 
+      });
+    }
+
+    const user = existingUsers[0];
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Capitaliser le rôle
+    const userRole = role ? (role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()) : user.role;
+
+    // Conversion du genre en sexe (0=M, 1=F)
+    let sexe = user.sexe;
+    if (genre) {
+        sexe = (genre === 'M' || genre === 'Masculin') ? 0 : 1;
+    }
+
+    // 2. Mettre à jour l'utilisateur
+    let updatedUsers;
+    
+    if (userRole === 'Medecin') {
+        // Pour un médecin
+        updatedUsers = await sql`
+          UPDATE utilisateur 
+          SET mdp = ${hashedPassword},
+              nom = ${nom || user.nom},
+              prenom = ${prenom || user.prenom},
+              telephone = ${telephone || user.telephone},
+              adresse_postale = ${adresse_hopital || adresse || user.adresse_postale},
+              date_naissance = ${date_naissance || user.date_naissance},
+              sexe = ${sexe},
+              role = 'Medecin'
+          WHERE email = ${email}
+          RETURNING id, email, role
+        `;
+        
+        // TODO: Si une table 'medecins' existe, insérer specialite, grade, numero_licence
+        
+    } else {
+        // Patient
+        updatedUsers = await sql`
+          UPDATE utilisateur 
+          SET mdp = ${hashedPassword},
+              securite_sociale = ${securite_sociale || user.securite_sociale},
+              nom = ${nom || user.nom},
+              prenom = ${prenom || user.prenom},
+              telephone = ${telephone || user.telephone},
+              adresse_postale = ${adresse || user.adresse_postale},
+              date_naissance = ${date_naissance || user.date_naissance},
+              sexe = ${sexe},
+              role = 'Patient'
+          WHERE email = ${email}
+          RETURNING id, email, role
+        `;
+        
+        // TODO: Si une table 'patients' ou 'dossier_medical' existe, insérer date_greffe, maladie, etc.
+    }
+
+    if (!updatedUsers || updatedUsers.length === 0) {
+      throw new Error("Échec de la mise à jour du compte.");
+    }
+
+    // Nettoyer le store OTP si nécessaire
+    otpStore.delete(email);
+
+    res.json({
+      success: true,
+      message: 'Inscription finalisée avec succès.',
+      user: updatedUsers[0]
+    });
+
+  } catch (err) {
+    console.error('[REGISTER] Erreur complete :', err);
+    res.status(500).json({ success: false, error: "Erreur lors de la finalisation de l'inscription." });
+  }
 });
 
 module.exports = router;

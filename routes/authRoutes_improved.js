@@ -49,15 +49,8 @@ router.post('/register', async (req, res) => {
     // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Déterminer l'id_utilisateur_medecin selon le rôle
-    let id_utilisateur_medecin;
-    if (role === 'patient') {
-      id_utilisateur_medecin = 2;
-    } else if (role === 'medecin') {
-      id_utilisateur_medecin = 1;
-    } else if (role === 'admin') {
-      id_utilisateur_medecin = 3;
-    }
+    // id_utilisateur_medecin est NULL par défaut (sera assigné plus tard pour les patients)
+    const id_utilisateur_medecin = null;
 
     // Générer des valeurs aléatoires pour les champs manquants
     const sexes = [0, 1];
@@ -85,10 +78,13 @@ router.post('/register', async (req, res) => {
     const phone = telephone || '0123456789';
 
     // Insérer le nouvel utilisateur
+    // Capitaliser le rôle pour la base de données (Patient, Medecin, Admin)
+    const roleCapitalized = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+
     const newUsers = await sql`
-      INSERT INTO utilisateur (email, mdp, securite_sociale, id_utilisateur_medecin, prenom, nom, date_naissance, sexe, telephone, adresse_postale)
-      VALUES (${email}, ${hashedPassword}, ${securite_sociale}, ${id_utilisateur_medecin}, 'À', 'compléter', ${date_naissance}, ${sexe}, ${phone}, ${adresse_postale})
-      RETURNING id, email, prenom, nom, id_utilisateur_medecin
+      INSERT INTO utilisateur (email, mdp, securite_sociale, id_utilisateur_medecin, role, prenom, nom, date_naissance, sexe, telephone, adresse_postale)
+      VALUES (${email}, ${hashedPassword}, ${securite_sociale}, ${id_utilisateur_medecin}, ${roleCapitalized}, 'À', 'compléter', ${date_naissance}, ${sexe}, ${phone}, ${adresse_postale})
+      RETURNING id, email, prenom, nom, role
     `;
 
     if (!newUsers || newUsers.length === 0) {
@@ -165,7 +161,8 @@ router.post('/patient/register', async (req, res) => {
           nom = ${nom || 'À compléter'},
           prenom = ${prenom || 'À compléter'},
           telephone = ${telephone || '0123456789'},
-          adresse_postale = ${adresse || 'À compléter'}
+          adresse_postale = ${adresse || 'À compléter'},
+          role = 'Patient'
       WHERE email = ${email}
       RETURNING id, email, prenom, nom, id_utilisateur_medecin
     `;
@@ -202,7 +199,7 @@ router.post('/patient/register', async (req, res) => {
 
 // ===== LOGIN ROUTES =====
 router.post('/login', async (req, res) => {
-  const { email, password, securite_sociale } = req.body;
+  const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email et mot de passe requis.' });
@@ -220,19 +217,18 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
-    // Vérifier le numéro de sécurité sociale si fourni
-    if (securite_sociale && dbUser.securite_sociale != securite_sociale) {
-      return res.status(401).json({ error: 'Numéro de sécurité sociale incorrect' });
-    }
+    // Déterminer le rôle
+    let role = dbUser.role;
 
-    // Déterminer le rôle basé sur id_utilisateur_medecin
-    let role = 'patient';
-    if (dbUser.id_utilisateur_medecin === 1) {
-      role = 'medecin';
-    } else if (dbUser.id_utilisateur_medecin === 3) {
-      role = 'admin';
-    } else if (dbUser.id_utilisateur_medecin === 2) {
-      role = 'patient';
+    // Fallback pour la rétrocompatibilité si le rôle n'est pas défini explicitement dans la colonne 'role'
+    if (!role) {
+      if (dbUser.id_utilisateur_medecin === 1) {
+        role = 'Medecin';
+      } else if (dbUser.id_utilisateur_medecin === 3) {
+        role = 'Admin';
+      } else {
+        role = 'Patient';
+      }
     }
 
     // Connexion réussie
@@ -282,7 +278,7 @@ router.post('/medecin/register', async (req, res) => {
       password,
       email_confirm: false,
       user_metadata: {
-        role: 'medecin',
+        role: 'Medecin',
       },
     });
 

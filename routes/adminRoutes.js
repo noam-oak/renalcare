@@ -1,6 +1,8 @@
 // routes/adminRoutes.js
 const express = require('express');
 const router = express.Router();
+const sql = require('../db');
+const bcrypt = require('bcrypt');
 
 const pendingRequestsStore = require('../services/pendingRequestsStore');
 const {
@@ -46,7 +48,43 @@ router.post('/validate-account', async (req, res) => {
   }
 
   try {
+    // 1. Générer les identifiants
+    const password = Math.random().toString(36).slice(-8); // Mot de passe aléatoire de 8 caractères
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const securite_sociale = Array.from({ length: 15 }, () => Math.floor(Math.random() * 10)).join('');
+    
+    // 2. Préparer les données
+    // Capitaliser le rôle (patient -> Patient, medecin -> Medecin)
+    const roleRaw = request.type === 'medecin' ? 'medecin' : 'patient';
+    const role = roleRaw.charAt(0).toUpperCase() + roleRaw.slice(1);
+    
+    const id_utilisateur_medecin = null;
+    
+    // Générer des valeurs par défaut pour les champs obligatoires manquants
+    const sexes = [0, 1];
+    const sexe = sexes[Math.floor(Math.random() * sexes.length)];
+    const adresse_postale = 'Adresse à compléter';
+    
+    // Date de naissance par défaut (adulte)
+    const today = new Date();
+    const birthDate = new Date(today.getFullYear() - 30, 0, 1);
+    const date_naissance = birthDate.toISOString().split('T')[0];
+
+    // 3. Insérer dans la base de données
+    const newUsers = await sql`
+      INSERT INTO utilisateur (email, mdp, securite_sociale, id_utilisateur_medecin, role, prenom, nom, date_naissance, sexe, telephone, adresse_postale)
+      VALUES (${request.email}, ${hashedPassword}, ${securite_sociale}, ${id_utilisateur_medecin}, ${role}, ${request.prenom}, ${request.nom}, ${date_naissance}, ${sexe}, ${request.telephone || '0000000000'}, ${adresse_postale})
+      RETURNING id
+    `;
+
+    if (!newUsers || newUsers.length === 0) {
+        throw new Error("Erreur lors de l'insertion en base de données");
+    }
+
+    // 4. Envoyer l'email avec le lien d'inscription
     await sendValidationEmail(request);
+    
+    // 5. Supprimer de la liste d'attente
     pendingRequestsStore.remove(request.id);
 
     return res.json({ success: true });
@@ -54,7 +92,7 @@ router.post('/validate-account', async (req, res) => {
     console.error('Erreur validate-account:', err);
     return res
       .status(500)
-      .json({ success: false, error: 'Erreur lors de la validation.' });
+      .json({ success: false, error: 'Erreur lors de la validation: ' + err.message });
   }
 });
 
