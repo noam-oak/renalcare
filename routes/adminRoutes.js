@@ -282,13 +282,18 @@ router.get('/stats', async (req, res) => {
     const pendingRequests = pendingRequestsStore.getAll();
     const pendingCount = pendingRequests.length;
 
+    // Récupérer les 3 dernières demandes pour l'activité récente
+    // On suppose que les dernières ajoutées sont à la fin, donc on inverse
+    const recentPending = [...pendingRequests].reverse().slice(0, 3);
+
     res.json({
       success: true,
       stats: {
         total: totalPatients + totalMedecins,
         patients: totalPatients,
         medecins: totalMedecins,
-        pending: pendingCount
+        pending: pendingCount,
+        recentActivity: recentPending
       }
     });
   } catch (err) {

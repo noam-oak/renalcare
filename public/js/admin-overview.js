@@ -39,6 +39,34 @@ function updateStatDisplay(stats) {
     if (pendingBtn) {
         pendingBtn.textContent = `⏳ Valider les comptes (${stats.pending})`;
     }
+
+    updateActivityList(stats.recentActivity);
+}
+
+function updateActivityList(activities) {
+    const container = document.getElementById('activity-list');
+    if (!container) return;
+
+    if (!activities || activities.length === 0) {
+        container.innerHTML = `
+            <div class="activity-item">
+                <div class="activity-content">
+                    <div class="activity-details">Aucune activité récente</div>
+                </div>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = activities.map(req => `
+        <div class="activity-item">
+            <div class="activity-icon">👤</div>
+            <div class="activity-content">
+                <div class="activity-title">Nouvelle demande d'inscription</div>
+                <div class="activity-details">${req.type === 'medecin' ? 'Médecin' : 'Patient'}: ${req.prenom} ${req.nom}</div>
+                <div class="activity-time">En attente</div>
+            </div>
+        </div>
+    `).join('');
 }
 
 function animateValue(id, end) {
