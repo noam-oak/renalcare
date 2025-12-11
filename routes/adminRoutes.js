@@ -132,4 +132,124 @@ router.post('/refuse-account', async (req, res) => {
   }
 });
 
+// ==========================================
+// GESTION DES UTILISATEURS (CRUD)
+// ==========================================
+
+/**
+ * GET /api/admin/users
+ * Récupère tous les utilisateurs (patients et médecins)
+ */
+router.get('/users', async (req, res) => {
+  try {
+    const users = await sql`
+      SELECT id, nom, prenom, email, role, telephone, securite_sociale 
+      FROM utilisateur 
+      WHERE role != 'Admin'
+      ORDER BY id DESC
+    `;
+    res.json(users);
+  } catch (err) {
+    console.error('Erreur GET /users:', err);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+});
+
+/**
+ * GET /api/admin/users/:id
+ * Récupère un utilisateur spécifique avec ses détails
+ */
+router.get('/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const users = await sql`SELECT * FROM utilisateur WHERE id = ${id}`;
+    if (users.length === 0) {
+      return res.status(404).json({ success: false, error: 'Utilisateur introuvable' });
+    }
+    
+    const user = users[0];
+    
+    // Récupérer des infos supplémentaires selon le rôle si nécessaire
+    // (ex: dossier médical pour patient)
+    let details = {};
+    if (user.role === 'Patient') {
+       const dossier = await sql`SELECT * FROM dossier_medical WHERE id_utilisateur = ${id}`;
+       if (dossier.length > 0) details.dossier = dossier[0];
+    }
+
+    res.json({ success: true, user, details });
+  } catch (err) {
+    console.error('Erreur GET /users/:id:', err);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+});
+
+/**
+ * PUT /api/admin/users/:id
+ * Met à jour un utilisateur
+ */
+router.put('/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nom, prenom, email, telephone, role, securite_sociale } = req.body;
+
+  try {
+    const updatedUsers = await sql`
+      UPDATE utilisateur 
+      SET nom = ${nom}, prenom = ${prenom}, email = ${email}, 
+          telephone = ${telephone}, role = ${role}, securite_sociale = ${securite_sociale}
+      WHERE id = ${id}
+      RETURNING *
+    `;
+
+    if (updatedUsers.length === 0) {
+      return res.status(404).json({ success: false, error: 'Utilisateur introuvable' });
+    }
+
+    res.json({ success: true, user: updatedUsers[0] });
+  } catch (err) {
+    console.error('Erreur PUT /users/:id:', err);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+});
+
+/**
+ * DELETE /api/admin/users/:id
+ * Supprime un utilisateur et ses données liées
+ */
+router.delete('/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Suppression en cascade manuelle (si pas de ON DELETE CASCADE en BDD)
+    // 1. Supprimer les messages
+    await sql`DELETE FROM messagerie WHERE id_utilisateur = ${id}`;
+    
+    // 2. Supprimer les RDV (si patient ou médecin)
+    // Besoin de vérifier le rôle ou essayer de supprimer dans les deux cas si les colonnes existent
+    // On suppose que l'ID est unique globalement
+    await sql`DELETE FROM rdv WHERE id_utilisateur_medecin = ${id}`;
+    
+    // 3. Supprimer le dossier médical et ses dépendances (si patient)
+    const dossier = await sql`SELECT id FROM dossier_medical WHERE id_utilisateur = ${id}`;
+    if (dossier.length > 0) {
+        const dossierId = dossier[0].id;
+        await sql`DELETE FROM reponse WHERE id_dossier_medical = ${dossierId}`;
+        await sql`DELETE FROM suivi_patient WHERE id_dossier_medical = ${dossierId}`;
+        await sql`DELETE FROM rdv WHERE id_dossier_medical = ${dossierId}`; // RDV liés au dossier
+        await sql`DELETE FROM dossier_medical WHERE id = ${dossierId}`;
+    }
+
+    // 4. Supprimer l'utilisateur
+    const result = await sql`DELETE FROM utilisateur WHERE id = ${id} RETURNING id`;
+
+    if (result.length === 0) {
+      return res.status(404).json({ success: false, error: 'Utilisateur introuvable' });
+    }
+
+    res.json({ success: true, message: 'Utilisateur supprimé avec succès' });
+  } catch (err) {
+    console.error('Erreur DELETE /users/:id:', err);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

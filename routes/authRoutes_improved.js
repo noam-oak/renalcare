@@ -207,20 +207,23 @@ router.post('/login', async (req, res) => {
 
   try {
     // Chercher l'utilisateur dans la table
-    const { data: dbUser, error: dbError } = await supabase
-      .from('utilisateur')
-      .select('*')
-      .eq('email', email)
-      .single();
+    const users = await sql`SELECT * FROM utilisateur WHERE email = ${email}`;
+    const dbUser = users[0];
 
-    if (!dbUser || dbUser.mdp !== password) {
+    if (!dbUser) {
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+    }
+
+    // Vérifier le mot de passe (hash)
+    const match = await bcrypt.compare(password, dbUser.mdp);
+    if (!match) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
     // Déterminer le rôle
     let role = dbUser.role;
 
-    // Fallback pour la rétrocompatibilité si le rôle n'est pas défini explicitement dans la colonne 'role'
+    // Fallback pour la rétrocompatibilité
     if (!role) {
       if (dbUser.id_utilisateur_medecin === 1) {
         role = 'Medecin';
@@ -231,6 +234,9 @@ router.post('/login', async (req, res) => {
       }
     }
 
+    // Normaliser le rôle en minuscule pour le frontend
+    const normalizedRole = role.toLowerCase();
+
     // Connexion réussie
     return res.status(200).json({
       success: true,
@@ -240,12 +246,57 @@ router.post('/login', async (req, res) => {
         email: dbUser.email,
         nom: dbUser.nom,
         prenom: dbUser.prenom,
-        role: role,
+        role: normalizedRole, // 'patient', 'medecin', 'admin'
         profile: dbUser,
       },
     });
   } catch (err) {
     console.error('Erreur login', err);
+    res.status(500).json({ error: 'Connexion impossible pour le moment.' });
+  }
+});
+
+// Route spécifique pour le login patient (même logique que /login)
+router.post('/patient/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email et mot de passe requis.' });
+  }
+
+  try {
+    const users = await sql`SELECT * FROM utilisateur WHERE email = ${email}`;
+    const dbUser = users[0];
+
+    if (!dbUser) {
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+    }
+
+    // Vérifier le mot de passe (hash)
+    const match = await bcrypt.compare(password, dbUser.mdp);
+    if (!match) {
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+    }
+
+    // Vérifier que c'est bien un patient
+    if (dbUser.role && dbUser.role.toLowerCase() !== 'patient') {
+       return res.status(403).json({ error: 'Accès réservé aux patients.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Connexion réussie',
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        nom: dbUser.nom,
+        prenom: dbUser.prenom,
+        role: 'patient',
+        profile: dbUser,
+      },
+    });
+  } catch (err) {
+    console.error('Erreur login patient', err);
     res.status(500).json({ error: 'Connexion impossible pour le moment.' });
   }
 });

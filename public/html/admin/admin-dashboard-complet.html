@@ -7,6 +7,7 @@
     <title>Dashboard Admin - Suivi Greffe Rénale</title>
     <link rel="stylesheet" href="../../style/admin.css">
     <script src="/js/sidebar.js" defer></script>
+    <script src="/js/admin-users.js" defer></script>
 </head>
 
 <body>
@@ -172,54 +173,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr data-type="patient">
-                                        <td>
-                                            <div class="user-cell">
-                                                <div class="user-avatar-small">SM</div>
-                                                <div class="user-details">
-                                                    <h4>Sophie Martin</h4>
-                                                    <p>sophie.martin@email.fr</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>Patient</td>
-                                        <td>15/03/2025</td>
-                                        <td><span class="status-badge status-active">Actif</span></td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <button class="btn-action btn-view"
-                                                    onclick="viewUser('Sophie Martin')">👁️</button>
-                                                <button class="btn-action btn-edit"
-                                                    onclick="editUser('Sophie Martin')">✏️</button>
-                                                <button class="btn-action btn-delete"
-                                                    onclick="deleteUser(this)">🗑️</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr data-type="medecin">
-                                        <td>
-                                            <div class="user-cell">
-                                                <div class="user-avatar-small">JD</div>
-                                                <div class="user-details">
-                                                    <h4>Dr. Jean Dubois</h4>
-                                                    <p>j.dubois@hopital.fr</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>Médecin</td>
-                                        <td>05/01/2023</td>
-                                        <td><span class="status-badge status-active">Actif</span></td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <button class="btn-action btn-view"
-                                                    onclick="viewUser('Dr. Jean Dubois')">👁️</button>
-                                                <button class="btn-action btn-edit"
-                                                    onclick="editUser('Dr. Jean Dubois')">✏️</button>
-                                                <button class="btn-action btn-delete"
-                                                    onclick="deleteUser(this)">🗑️</button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    <!-- Rempli dynamiquement par admin-users.js -->
                                 </tbody>
                             </table>
                         </div>
@@ -628,6 +582,59 @@
                     <button type="button" class="btn-secondary" onclick="closeCreateUserModal()"
                         style="flex: 1;">Annuler</button>
                     <button type="submit" class="btn-primary" style="flex: 1;">Créer le compte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Édition Utilisateur -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Modifier l'utilisateur</h2>
+                <button class="close-modal" onclick="closeEditUserModal()">×</button>
+            </div>
+            <form id="editUserForm" onsubmit="submitEditUser(event)">
+                <input type="hidden" id="editUserId">
+                
+                <div class="form-group">
+                    <label>Rôle</label>
+                    <select id="editUserRole" required>
+                        <option value="Patient">Patient</option>
+                        <option value="Medecin">Médecin</option>
+                        <option value="Admin">Administrateur</option>
+                    </select>
+                </div>
+
+                <div class="form-row" style="display: flex; gap: 20px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Nom</label>
+                        <input type="text" id="editUserNom" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Prénom</label>
+                        <input type="text" id="editUserPrenom" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="editUserEmail" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Téléphone</label>
+                    <input type="tel" id="editUserTelephone">
+                </div>
+
+                <div class="form-group">
+                    <label>Numéro Sécurité Sociale</label>
+                    <input type="text" id="editUserSecu">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <button type="button" class="btn-secondary" onclick="closeEditUserModal()" style="flex: 1;">Annuler</button>
+                    <button type="submit" class="btn-primary" style="flex: 1;">Enregistrer</button>
                 </div>
             </form>
         </div>
