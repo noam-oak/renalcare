@@ -2069,7 +2069,12 @@ body {
 
         function logout() {
             if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                alert('Déconnexion réussie. Redirection vers la page de connexion...');
+                // Supprimer le token de localStorage
+                localStorage.removeItem('token');
+                localStorage.removeItem('userType');
+                localStorage.removeItem('userId');
+                // Redirection vers la page d'accueil
+                window.location.href = '/';
             }
         }
     </script>

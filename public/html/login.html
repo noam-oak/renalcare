@@ -192,6 +192,21 @@
             display: block;
         }
 
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
@@ -220,6 +235,7 @@
             <h2>Connexion</h2>
             <p class="subtitle">Connectez-vous à votre compte</p>
 
+            <div class="success-message" id="successMessage">✅ Inscription réussie ! Vous pouvez maintenant vous connecter avec vos identifiants.</div>
             <div class="error-message" id="errorMessage"></div>
 
             <form id="loginForm">
@@ -255,6 +271,17 @@
         </div>
     </div>
 
+    <script>
+        // Vérifier si l'utilisateur vient de s'inscrire
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('registered') === 'true') {
+            document.getElementById('successMessage').classList.add('show');
+            // Retirer le paramètre de l'URL après 5 secondes
+            setTimeout(() => {
+                window.history.replaceState({}, document.title, '/login');
+            }, 5000);
+        }
+    </script>
     <script src="/js/login.js"></script>
 </body>
 

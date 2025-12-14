@@ -51,7 +51,7 @@ router.post('/validate-account', async (req, res) => {
     // 1. Générer les identifiants
     const password = Math.random().toString(36).slice(-8); // Mot de passe aléatoire de 8 caractères
     const hashedPassword = await bcrypt.hash(password, 10);
-    const securite_sociale = Array.from({ length: 15 }, () => Math.floor(Math.random() * 10)).join('');
+    const securite_sociale = BigInt(Array.from({ length: 15 }, () => Math.floor(Math.random() * 10)).join(''));
     
     // 2. Préparer les données
     // Capitaliser le rôle (patient -> Patient, medecin -> Medecin)
@@ -73,7 +73,7 @@ router.post('/validate-account', async (req, res) => {
     // 3. Insérer dans la base de données
     const newUsers = await sql`
       INSERT INTO utilisateur (email, mdp, securite_sociale, id_utilisateur_medecin, role, prenom, nom, date_naissance, sexe, telephone, adresse_postale)
-      VALUES (${request.email}, ${hashedPassword}, ${securite_sociale}, ${id_utilisateur_medecin}, ${role}, ${request.prenom}, ${request.nom}, ${date_naissance}, ${sexe}, ${request.telephone || '0000000000'}, ${adresse_postale})
+      VALUES (${request.email}, ${hashedPassword}, ${securite_sociale.toString()}, ${id_utilisateur_medecin}, ${role}, ${request.prenom}, ${request.nom}, ${date_naissance}, ${sexe}, ${request.telephone || '0000000000'}, ${adresse_postale})
       RETURNING id
     `;
 
