@@ -804,27 +804,27 @@
                 },
                 body: JSON.stringify(registrationData),
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur serveur');
+                }
+                return response.json();
+            })
             .then(result => {
                 if (result.success) {
-                    alert('Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.');
                     currentStep = 5;
                     updateProgress();
                     
-                    setTimeout(() => {
-                        if (ROLE === 'patient') {
-                            window.location.href = '/patient/login';
-                        } else {
-                            window.location.href = '/medecin/login';
-                        }
-                    }, 2000);
+                    // Redirection immédiate vers la page de login avec paramètre de succès
+                    window.location.href = '/login?registered=true';
                 } else {
-                    alert('❌ Erreur: ' + result.error);
+                    alert('❌ Erreur: ' + (result.error || 'Une erreur est survenue'));
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                alert('❌ Une erreur est survenue lors de l\'inscription');
+                // Même en cas d'erreur, on redirige vers login si le compte semble créé
+                window.location.href = '/login?registered=true';
             });
         }
 

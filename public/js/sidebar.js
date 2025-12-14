@@ -77,3 +77,17 @@
     });
   });
 })();
+
+// Fonction de déconnexion globale pour tous les types d'utilisateurs
+window.logout = function() {
+  if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+    // Supprimer toutes les données de session
+    localStorage.removeItem('token');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('userId');
+    sessionStorage.clear();
+    
+    // Redirection vers la page d'accueil
+    window.location.href = '/';
+  }
+};

@@ -137,10 +137,7 @@ router.post('/complete', async (req, res) => {
               adresse_postale = ${adresse_hopital || adresse || user.adresse_postale},
               date_naissance = ${date_naissance || user.date_naissance},
               sexe = ${sexe},
-              role = 'Medecin',
-              grade = ${grade || null},
-              specialite = ${specialite || null},
-              numero_licence = ${numero_licence || null}
+              role = 'Medecin'
           WHERE email = ${email}
           RETURNING id, email, role
         `;

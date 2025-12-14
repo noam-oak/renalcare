@@ -250,11 +250,7 @@ if (step4Form) {
       goToStep(5); // Afficher la page de succès si elle existe
       
       setTimeout(() => {
-        if (ROLE === 'patient') {
-          window.location.href = '/patient/login';
-        } else {
-          window.location.href = '/medecin/login';
-        }
+        window.location.href = '/login';
       }, 2000);
     } catch (err) {
       console.error(err);

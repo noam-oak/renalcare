@@ -49,9 +49,9 @@ async function sendContactNotification(contact) {
 // -----------------------------------------------------
 function getInscriptionLink(type) {
   // IMPORTANT : ici on met bien les URL que ton serveur sert
-  // Dans app.js tu as : `/medecin/inscription` et `/patient/register`
+  // Dans app.js tu as : `/medecin/register` et `/patient/register`
   return type === 'medecin'
-    ? 'http://localhost:3000/medecin/inscription'
+    ? 'http://localhost:3000/medecin/register'
     : 'http://localhost:3000/patient/register';
 }
 

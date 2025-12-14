@@ -35,7 +35,7 @@ const htmlRoutes = [
   { paths: ['/admin/login'], file: 'admin/admin-login.html' },
   { paths: ['/medecin/dashboard'], file: 'Medecin/medecin-dashboard-complet.html' },
   { paths: ['/medecin/login'], file: 'Medecin/medecin-login.html' },
-  { paths: ['/medecin/inscription'], file: 'Medecin/medecin-inscription.html' },
+  { paths: ['/medecin/register'], file: 'Medecin/medecin-inscription.html' },
   { paths: ['/patient/dashboard'], file: 'Patient/patient-dashboard.html' },
   { paths: ['/patient/login'], file: 'Patient/patient-login.html' },
   { paths: ['/patient/register'], file: 'Patient/patient-inscription.html' },

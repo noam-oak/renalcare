@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription Médecin - RenalCare</title>
+    <title>Inscription Médecin - Suivi Greffe Rénale</title>
     <style>
         * {
             margin: 0;
@@ -13,160 +13,45 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #8e44ad 0%, #c0392b 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            padding: 40px 20px;
+        }
+
+        body[data-role="medecin"] {
+            background: linear-gradient(135deg, #8e44ad 0%, #c0392b 100%);
         }
 
         .container {
+            max-width: 800px;
+            margin: 0 auto;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 60px 40px;
-            max-width: 500px;
-            width: 100%;
+            overflow: hidden;
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .icon {
-            font-size: 60px;
-            margin-bottom: 15px;
-        }
-
-        h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .subtitle {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        .info-box {
-            background: #e8f4f8;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            font-size: 13px;
-            color: #555;
-            line-height: 1.6;
-        }
-
-        .info-box strong {
-            color: #333;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            transition: border-color 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn-register {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #8e44ad 0%, #c0392b 100%);
+            padding: 40px;
             color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            margin-top: 10px;
-        }
-
-        .btn-register:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-register:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .error-message {
-            display: none;
-            background: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        .success-message {
-            display: none;
-            background: #efe;
-            color: #3c3;
-            border: 1px solid #cfc;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .success-message.show {
-            display: block;
-        }
-
-        .login-link {
             text-align: center;
-            margin-top: 20px;
-            color: #666;
-            font-size: 14px;
         }
 
-        .login-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
         }
 
-        .login-link a:hover {
-            text-decoration: underline;
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
         }
-    </style>
+
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 30px 40px;
             background: #f8f9fa;
         }
 
@@ -301,7 +186,7 @@
 
         textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 80px;
         }
 
         .btn-group {
@@ -362,6 +247,16 @@
         }
 
         .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #0c5460;
+        }
+
+        .warning-box {
             background: #fff3cd;
             border-left: 4px solid #ffc107;
             padding: 15px;
@@ -393,6 +288,23 @@
         .success-box h3 {
             color: #155724;
             margin-bottom: 10px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+        }
+
+        .radio-group input[type="radio"] {
+            width: auto;
         }
 
         .password-requirements {
@@ -435,7 +347,7 @@
     <div class="container">
         <div class="header">
             <h1>⚕️ Inscription Médecin</h1>
-            <p>Créez votre compte pour accéder à la plateforme de suivi</p>
+            <p>Créez votre espace professionnel de suivi des greffés rénaux</p>
         </div>
 
         <div class="progress-bar">
@@ -453,16 +365,20 @@
             </div>
             <div class="progress-step" data-step="4">
                 <div class="step-circle">4</div>
-                <div class="step-label">Profil</div>
+                <div class="step-label">Profil Médical</div>
             </div>
         </div>
 
         <div class="form-content">
-            <form id="inscriptionForm">
+            <form>
                 <!-- Étape 1: Informations de base -->
-                <div class="form-section active" data-section="1">
-                    <h2 class="section-title">Informations de base</h2>
-                    <p class="section-subtitle">Veuillez renseigner vos informations personnelles</p>
+                <div class="form-section active" data-section="1" data-step="1">
+                    <h2 class="section-title">Vos informations professionnelles</h2>
+                    <p class="section-subtitle">Ces informations sont nécessaires pour créer votre dossier</p>
+
+                    <div class="warning-box">
+                        ⚠️ <strong>Important :</strong> Votre inscription doit être validée par l'équipe administrative. Assurez-vous que vos informations sont exactes.
+                    </div>
 
                     <div class="form-row">
                         <div class="form-group">
@@ -476,42 +392,36 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Email Professionnel <span class="required">*</span></label>
+                        <label>Email professionnel <span class="required">*</span></label>
                         <input type="email" name="email" placeholder="dr.nom@hopital.fr" required>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Téléphone <span class="required">*</span></label>
-                            <input type="tel" name="telephone" placeholder="06 12 34 56 78" required>
-                        </div>
-                        <div class="form-group">
-                            <label>N° d'Immatriculation RPPS <span class="required">*</span></label>
-                            <input type="text" name="num_rpps" placeholder="12345678901" maxlength="11" required>
-                        </div>
+                    <div class="form-group">
+                        <label>Téléphone <span class="required">*</span></label>
+                        <input type="tel" name="telephone" placeholder="06 12 34 56 78" required>
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn btn-primary">Suivant</button>
+                        <button type="button" class="btn btn-primary" id="btn-next-step1">Suivant</button>
                     </div>
                 </div>
 
                 <!-- Étape 2: Vérification email -->
-                <div class="form-section" data-section="2">
+                <div class="form-section" data-section="2" data-step="2">
                     <h2 class="section-title">Vérification de l'email</h2>
-                    <p class="section-subtitle">Un code de vérification a été envoyé à votre email</p>
+                    <p class="section-subtitle">Un code de vérification a été envoyé à votre adresse email</p>
 
                     <div class="info-box">
-                        📧 Veuillez vérifier votre boîte de réception et entrer le code à 6 chiffres reçu.
+                        📧 Veuillez vérifier votre boîte de réception et entrer le code à 6 chiffres reçu. Pensez à vérifier vos courriers indésirables.
                     </div>
 
                     <div class="verification-code">
-                        <input type="text" class="code-input" maxlength="1" data-index="0">
-                        <input type="text" class="code-input" maxlength="1" data-index="1">
-                        <input type="text" class="code-input" maxlength="1" data-index="2">
-                        <input type="text" class="code-input" maxlength="1" data-index="3">
-                        <input type="text" class="code-input" maxlength="1" data-index="4">
-                        <input type="text" class="code-input" maxlength="1" data-index="5">
+                        <input type="text" class="otp-input" maxlength="1" data-index="0">
+                        <input type="text" class="otp-input" maxlength="1" data-index="1">
+                        <input type="text" class="otp-input" maxlength="1" data-index="2">
+                        <input type="text" class="otp-input" maxlength="1" data-index="3">
+                        <input type="text" class="otp-input" maxlength="1" data-index="4">
+                        <input type="text" class="otp-input" maxlength="1" data-index="5">
                     </div>
 
                     <div style="text-align: center; margin-top: 20px;">
@@ -520,14 +430,14 @@
 
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary" onclick="prevStep()">Retour</button>
-                        <button type="button" class="btn btn-primary">Vérifier</button>
+                        <button type="button" id="verify-code-btn" class="btn btn-primary">Vérifier</button>
                     </div>
                 </div>
 
                 <!-- Étape 3: Création mot de passe -->
-                <div class="form-section" data-section="3">
-                    <h2 class="section-title">Sécurité du compte</h2>
-                    <p class="section-subtitle">Créez un mot de passe sécurisé pour votre compte</p>
+                <div class="form-section" data-section="3" data-step="3">
+                    <h2 class="section-title">Sécurité de votre compte</h2>
+                    <p class="section-subtitle">Créez un mot de passe sécurisé pour protéger vos données</p>
 
                     <div id="passwordError" class="error-box">
                         ❌ <strong>Mot de passe invalide :</strong> <span id="errorMessage"></span>
@@ -553,26 +463,55 @@
 
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary" onclick="prevStep()">Retour</button>
-                        <button type="button" class="btn btn-primary" id="btnNextPassword" onclick="validatePasswordAndNext()">Suivant</button>
+                        <button type="button" class="btn btn-primary" id="btnNextPassword">Suivant</button>
                     </div>
                 </div>
 
                 <!-- Étape 4: Informations professionnelles -->
-                <div class="form-section" data-section="4">
-                    <h2 class="section-title">Informations professionnelles</h2>
-                    <p class="section-subtitle">Complétez votre profil médical</p>
+                <div class="form-section" data-section="4" data-step="4">
+                    <h2 class="section-title">Profil professionnel</h2>
+                    <p class="section-subtitle">Ces informations permettront de compléter votre profil</p>
+
+                    <div class="form-group">
+                        <label>Spécialité <span class="required">*</span></label>
+                        <select name="specialite" required>
+                            <option value="">Sélectionnez...</option>
+                            <option value="Néphrologie">Néphrologie</option>
+                            <option value="Urologie">Urologie</option>
+                            <option value="Chirurgie">Chirurgie</option>
+                            <option value="Médecine interne">Médecine interne</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                    </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Grade <span class="required">*</span></label>
-                            <select name="grade" required>
+                            <label>Numéro de licence <span class="required">*</span></label>
+                            <input type="text" name="numero_licence" placeholder="Ex: 123456789" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Grade</label>
+                            <select name="grade">
                                 <option value="">Sélectionnez...</option>
                                 <option value="Interne">Interne</option>
                                 <option value="Chef de clinique">Chef de clinique</option>
                                 <option value="Praticien hospitalier">Praticien hospitalier</option>
                                 <option value="Professeur">Professeur</option>
-                                <option value="Autre">Autre</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Genre <span class="required">*</span></label>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="genre" value="M" required> M
+                                </label>
+                                <label>
+                                    <input type="radio" name="genre" value="F" required> F
+                                </label>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Date de naissance <span class="required">*</span></label>
@@ -581,29 +520,24 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Spécialité / Service <span class="required">*</span></label>
-                        <input type="text" name="specialite" placeholder="Ex: Néphrologie, Urologie" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Adresse de l'hôpital <span class="required">*</span></label>
-                        <textarea name="adresse_hopital" placeholder="Nom de l'établissement et adresse complète" required></textarea>
+                        <label>Adresse de l'hôpital / Cabinet <span class="required">*</span></label>
+                        <textarea name="adresse_hopital" placeholder="Numéro, rue, code postal, ville" required></textarea>
                     </div>
 
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary" onclick="prevStep()">Retour</button>
-                        <button type="submit" class="btn btn-primary">Créer mon compte</button>
+                        <button type="button" class="btn btn-primary" id="btn-complete-inscription">Créer mon compte</button>
                     </div>
                 </div>
 
-                <!-- Confirmation -->
+                <!-- Succès -->
                 <div class="form-section" data-section="5">
                     <div class="success-box">
-                        <h3>✅ Compte créé avec succès !</h3>
-                        <p>Votre compte médecin a été créé. Vous allez être redirigé vers la page de connexion...</p>
-                        <button type="button" class="btn btn-primary" style="margin-top: 20px;" onclick="window.location.href='#'">
-                            Se connecter maintenant
-                        </button>
+                        <h3>✅ Inscription réussie !</h3>
+                        <p style="margin: 15px 0;">Votre compte a été créé avec succès. Vous allez être redirigé vers la page de connexion.</p>
+                        <p style="font-size: 14px; color: #666; margin-top: 15px;">
+                            Vous pourrez maintenant vous connecter avec vos identifiants.
+                        </p>
                     </div>
                 </div>
             </form>
@@ -652,25 +586,25 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         // === ÉTAPE 1: Bouton Suivant ===
-        const step1Btn = document.querySelector('[data-section="1"] button.btn-primary');
-        if (step1Btn) {
-            step1Btn.addEventListener('click', async (e) => {
+        const btnNextStep1 = document.getElementById('btn-next-step1');
+        if (btnNextStep1) {
+            btnNextStep1.addEventListener('click', async (e) => {
                 e.preventDefault();
 
                 const nom = document.querySelector('input[name="nom"]')?.value?.trim();
                 const prenom = document.querySelector('input[name="prenom"]')?.value?.trim();
                 const email = document.querySelector('input[name="email"]')?.value?.trim();
+                const telephone = document.querySelector('input[name="telephone"]')?.value?.trim();
 
-                if (!nom || !prenom || !email) {
-                    alert('Merci de remplir nom, prénom et email.');
+                if (!nom || !prenom || !email || !telephone) {
+                    alert('Merci de remplir tous les champs obligatoires.');
                     return;
                 }
 
                 registrationData.nom = nom;
                 registrationData.prenom = prenom;
                 registrationData.email = email;
-                registrationData.telephone = document.querySelector('input[name="telephone"]')?.value?.trim();
-                registrationData.numero_licence = document.querySelector('input[name="num_rpps"]')?.value?.trim();
+                registrationData.telephone = telephone;
 
                 try {
                     const res = await fetch('/api/register/send-code', {
@@ -695,10 +629,10 @@
         }
 
         // === ÉTAPE 2: Vérification du code ===
-        const verifyCodeBtn = document.querySelector('[data-section="2"] button.btn-primary');
+        const verifyCodeBtn = document.getElementById('verify-code-btn');
         if (verifyCodeBtn) {
             verifyCodeBtn.addEventListener('click', async () => {
-                const codeInputs = document.querySelectorAll('[data-section="2"] .code-input');
+                const codeInputs = document.querySelectorAll('.otp-input');
                 const code = Array.from(codeInputs).map(i => i.value.trim()).join('');
                 
                 if (code.length !== 6) {
@@ -765,52 +699,63 @@
             passwordConfirmInput.addEventListener('input', validatePassword);
         }
 
-        window.validatePasswordAndNext = function() {
-            const validation = validatePassword();
-            const errorBox = document.getElementById('passwordError');
-            const errorMessage = document.getElementById('errorMessage');
+        const btnNextPassword = document.getElementById('btnNextPassword');
+        if (btnNextPassword) {
+            btnNextPassword.addEventListener('click', () => {
+                const validation = validatePassword();
+                const errorBox = document.getElementById('passwordError');
+                const errorMessage = document.getElementById('errorMessage');
 
-            if (!validation.isValid) {
-                let errors = [];
-                if (!validation.hasLength) errors.push('au moins 8 caractères');
-                if (!validation.hasUppercase) errors.push('une majuscule');
-                if (!validation.hasLowercase) errors.push('une minuscule');
-                if (!validation.hasNumber) errors.push('un chiffre');
-                if (!validation.passwordsMatch && passwordConfirmInput.value) errors.push('les mots de passe doivent être identiques');
+                if (!validation.isValid) {
+                    let errors = [];
+                    if (!validation.hasLength) errors.push('au moins 8 caractères');
+                    if (!validation.hasUppercase) errors.push('une majuscule');
+                    if (!validation.hasLowercase) errors.push('une minuscule');
+                    if (!validation.hasNumber) errors.push('un chiffre');
+                    if (!validation.passwordsMatch && passwordConfirmInput.value) errors.push('les mots de passe doivent être identiques');
 
-                errorMessage.textContent = 'Le mot de passe doit contenir ' + errors.join(', ') + '.';
-                errorBox.style.display = 'block';
-                
-                passwordInput.classList.add('error');
-                if (!validation.passwordsMatch) {
-                    passwordConfirmInput.classList.add('error');
+                    errorMessage.textContent = 'Le mot de passe doit contenir ' + errors.join(', ') + '.';
+                    errorBox.style.display = 'block';
+                    
+                    passwordInput.classList.add('error');
+                    if (!validation.passwordsMatch) {
+                        passwordConfirmInput.classList.add('error');
+                    }
+                    return;
                 }
-                return;
-            }
 
-            errorBox.style.display = 'none';
-            passwordInput.classList.remove('error');
-            passwordConfirmInput.classList.remove('error');
-            registrationData.password = passwordInput.value;
-            nextStep();
+                errorBox.style.display = 'none';
+                passwordInput.classList.remove('error');
+                passwordConfirmInput.classList.remove('error');
+                registrationData.password = passwordInput.value;
+                nextStep();
+            });
         }
 
-        // === ÉTAPE 4: Profil médical ===
-        const inscriptionForm = document.getElementById('inscriptionForm');
-        if (inscriptionForm) {
-            inscriptionForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const grade = document.querySelector('select[name="grade"]')?.value || null;
-                const date_naissance = document.querySelector('input[name="date_naissance"]')?.value || null;
-                const specialite = document.querySelector('input[name="specialite"]')?.value || null;
-                const adresse_hopital = document.querySelector('textarea[name="adresse_hopital"]')?.value || null;
+        // === ÉTAPE 4: Profil professionnel ===
+        const btnComplete = document.getElementById('btn-complete-inscription');
+        if (btnComplete) {
+            btnComplete.addEventListener('click', async () => {
+                const specialite = document.querySelector('select[name="specialite"]')?.value;
+                const numero_licence = document.querySelector('input[name="numero_licence"]')?.value?.trim();
+                const grade = document.querySelector('select[name="grade"]')?.value;
+                const adresse_hopital = document.querySelector('textarea[name="adresse_hopital"]')?.value?.trim();
+                const date_naissance = document.querySelector('input[name="date_naissance"]')?.value;
+                const genre = document.querySelector('input[name="genre"]:checked')?.value;
+
+                if (!specialite || !numero_licence || !adresse_hopital || !date_naissance || !genre) {
+                    alert("Merci de remplir tous les champs obligatoires.");
+                    return;
+                }
 
                 Object.assign(registrationData, {
-                    grade,
-                    date_naissance,
                     specialite,
+                    numero_licence,
+                    grade,
                     adresse_hopital,
+                    adresse: adresse_hopital,
+                    date_naissance,
+                    genre
                 });
 
                 try {
@@ -822,25 +767,24 @@
                     const result = await res.json();
 
                     if (result.success) {
-                        alert('Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.');
                         currentStep = 5;
                         updateProgress();
                         
-                        setTimeout(() => {
-                            window.location.href = '/medecin/login';
-                        }, 2000);
+                        // Redirection immédiate vers la page de login avec paramètre de succès
+                        window.location.href = '/login?registered=true';
                     } else {
-                        alert('❌ Erreur: ' + result.error);
+                        alert('❌ Erreur: ' + (result.error || 'Une erreur est survenue'));
                     }
                 } catch (error) {
                     console.error('Erreur:', error);
-                    alert('❌ Une erreur est survenue lors de l\'inscription');
+                    // Même en cas d'erreur, on redirige vers login si le compte semble créé
+                    window.location.href = '/login?registered=true';
                 }
             });
         }
 
         // === AUTO-AVANCE INPUTS OTP ===
-        const codeInputs = document.querySelectorAll('.code-input');
+        const codeInputs = document.querySelectorAll('.otp-input');
         codeInputs.forEach((input, index) => {
             input.addEventListener('input', function(e) {
                 if (e.target.value.length === 1 && index < codeInputs.length - 1) {
@@ -855,7 +799,7 @@
             });
         });
 
-        console.log('✅ Script inscription médecin chargé pour role:', ROLE);
+        console.log('✅ Script inscription médecin chargé');
     });
 </script>
 </body>

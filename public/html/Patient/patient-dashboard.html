@@ -461,6 +461,18 @@
             const chatBody = document.getElementById('chatbotBody');
             chatBody.scrollTop = chatBody.scrollHeight;
         }
+
+        // Fonction de déconnexion
+        function logout() {
+            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                // Supprimer le token de localStorage
+                localStorage.removeItem('token');
+                localStorage.removeItem('userType');
+                localStorage.removeItem('userId');
+                // Redirection vers la page d'accueil
+                window.location.href = '/';
+            }
+        }
     </script>
     <script src="/js/patient-dashboard.js"></script>
 </body>
