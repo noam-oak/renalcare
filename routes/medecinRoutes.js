@@ -1,8 +1,134 @@
 const express = require('express');
 const router = express.Router();
+const sql = require('../db');
+const bcrypt = require('bcrypt');
+
+// Middleware pour vérifier le token et extraire l'ID du médecin
+const authenticateMedecin = async (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, message: 'Token manquant' });
+        }
+
+        const token = authHeader.substring(7);
+        
+        // Décoder le token (pour simplifier, on suppose que le token contient l'ID utilisateur)
+        // Dans une vraie application, utilisez jsonwebtoken pour décoder et vérifier
+        const userId = parseInt(token);
+        
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'Token invalide' });
+        }
+
+        // Récupérer les infos du médecin depuis la table utilisateur
+        const medecins = await sql`
+            SELECT * FROM utilisateur 
+            WHERE id = ${userId} AND role = 'Medecin'
+        `;
+
+        if (!medecins || medecins.length === 0) {
+            return res.status(403).json({ success: false, message: 'Accès refusé - Médecin non trouvé' });
+        }
+
+        req.userId = userId;
+        req.medecin = medecins[0];
+        next();
+    } catch (error) {
+        console.error('Erreur authentification:', error);
+        return res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+};
+
+// GET patients non affectés
+router.get('/patients-non-affectes', authenticateMedecin, async (req, res) => {
+    try {
+        // Récupérer tous les patients qui n'ont pas de id_utilisateur_medecin
+        const patients = await sql`
+            SELECT id, prenom, nom, email, date_naissance, telephone, adresse_postale, created_at
+            FROM utilisateur 
+            WHERE role = 'Patient' 
+            AND (id_utilisateur_medecin IS NULL OR id_utilisateur_medecin = 0)
+            ORDER BY created_at DESC
+        `;
+
+        res.json({ success: true, patients: patients || [] });
+    } catch (error) {
+        console.error('Erreur:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+});
+
+// POST affecter un patient au médecin
+router.post('/affecter-patient', authenticateMedecin, async (req, res) => {
+    try {
+        const { patient_id } = req.body;
+
+        if (!patient_id) {
+            return res.status(400).json({ success: false, message: 'ID patient manquant' });
+        }
+
+        // Vérifier que le patient existe et n'est pas déjà affecté
+        const patients = await sql`
+            SELECT id, prenom, nom, id_utilisateur_medecin
+            FROM utilisateur 
+            WHERE id = ${patient_id} AND role = 'Patient'
+        `;
+
+        if (!patients || patients.length === 0) {
+            return res.status(404).json({ success: false, message: 'Patient non trouvé' });
+        }
+
+        const patient = patients[0];
+
+        if (patient.id_utilisateur_medecin && patient.id_utilisateur_medecin !== 0) {
+            return res.status(400).json({ success: false, message: 'Ce patient est déjà affecté à un médecin' });
+        }
+
+        // Affecter le patient au médecin
+        const updatedPatients = await sql`
+            UPDATE utilisateur 
+            SET id_utilisateur_medecin = ${req.userId}
+            WHERE id = ${patient_id}
+            RETURNING id, prenom, nom, email
+        `;
+
+        if (!updatedPatients || updatedPatients.length === 0) {
+            return res.status(500).json({ success: false, message: 'Erreur lors de l\'affectation' });
+        }
+
+        res.json({ 
+            success: true, 
+            message: `Patient ${patient.prenom} ${patient.nom} affecté avec succès`,
+            patient: updatedPatients[0]
+        });
+    } catch (error) {
+        console.error('Erreur:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+});
 
 // GET médecin info
 router.get('/me', (req, res) => res.json({ success: true, data: { name: 'Médecin Test' } }));
+
+// GET mes patients (patients affectés au médecin connecté)
+router.get('/mes-patients', authenticateMedecin, async (req, res) => {
+    try {
+        // Récupérer tous les patients affectés à ce médecin
+        const patients = await sql`
+            SELECT id, prenom, nom, email, date_naissance, telephone, adresse_postale, created_at
+            FROM utilisateur 
+            WHERE role = 'Patient' 
+            AND id_utilisateur_medecin = ${req.userId}
+            ORDER BY nom ASC, prenom ASC
+        `;
+
+        res.json({ success: true, patients: patients || [] });
+    } catch (error) {
+        console.error('Erreur:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+});
 
 // GET stats, patients
 router.get('/:id/stats', (req, res) => res.json({ success: true, stats: {} }));

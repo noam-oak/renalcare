@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes_improved');
 const adminRoutes = require('./routes/adminRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
+const medecinRoutes = require('./routes/medecinRoutes');
 
 
 // Dossier public (HTML, CSS, JS statiques)
@@ -65,6 +66,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/register', registrationRoutes);
+app.use('/api/medecin', medecinRoutes);
 
 
 // Route de test de connexion à la base de données
