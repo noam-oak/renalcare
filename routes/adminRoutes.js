@@ -50,6 +50,15 @@ router.post('/validate-account', async (req, res) => {
   }
 
   try {
+    // Stopper proprement si l'email existe déjà en base
+    const existing = await sql`SELECT id, role FROM utilisateur WHERE email = ${request.email}`;
+    if (existing.length > 0) {
+      return res.status(409).json({
+        success: false,
+        error: `Un compte existe déjà pour ${request.email}. Supprimez/traitez la demande en double ou réinitialisez le mot de passe de ce compte.`,
+      });
+    }
+
     // 1. Générer les identifiants
     const password = Math.random().toString(36).slice(-8); // Mot de passe aléatoire de 8 caractères
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
