@@ -675,13 +675,13 @@ body {
                 <div class="header-right">
                     <div class="notification-icon">
                         🔔
-                        <span class="notification-badge">5</span>
+                        <span class="notification-badge">0</span>
                     </div>
                     <div class="user-profile">
-                        <div class="user-avatar">DM</div>
+                        <div class="user-avatar">--</div>
                         <div class="user-info">
-                            <h3>Dr. Martin</h3>
-                            <p>Néphrologue</p>
+                            <h3>Médecin</h3>
+                            <p>Profil</p>
                         </div>
                     </div>
                 </div>
@@ -695,7 +695,7 @@ body {
                     <div class="stats-grid">
                         <div class="stat-card purple">
                             <div class="stat-info">
-                                <h3 id="totalPatients">42</h3>
+                                <h3 id="totalPatients">0</h3>
                                 <p>Patients actifs</p>
                             </div>
                             <div class="stat-icon">👥</div>
@@ -709,14 +709,14 @@ body {
                         </div>
                         <div class="stat-card green">
                             <div class="stat-info">
-                                <h3>12</h3>
+                                <h3>--</h3>
                                 <p>Messages non lus</p>
                             </div>
                             <div class="stat-icon">💬</div>
                         </div>
                         <div class="stat-card orange">
                             <div class="stat-info">
-                                <h3>3</h3>
+                                <h3>--</h3>
                                 <p>Alertes en attente</p>
                             </div>
                             <div class="stat-icon">⚠️</div>
@@ -731,41 +731,7 @@ body {
                             </div>
 
                             <div id="recentPatientsList">
-                                <div class="patient-item" onclick="viewPatient('Sophie Martin')">
-                                    <div class="patient-avatar">SM</div>
-                                    <div class="patient-info">
-                                        <h4>Sophie Martin</h4>
-                                        <p>Greffe il y a 6 mois • Dernière visite: 15/09/2025</p>
-                                    </div>
-                                    <span class="patient-status status-stable">Stable</span>
-                                </div>
-
-                                <div class="patient-item" onclick="viewPatient('Jean Dupont')">
-                                    <div class="patient-avatar">JD</div>
-                                    <div class="patient-info">
-                                        <h4>Jean Dupont</h4>
-                                        <p>Greffe il y a 2 ans • Dernière visite: 20/09/2025</p>
-                                    </div>
-                                    <span class="patient-status status-stable">Stable</span>
-                                </div>
-
-                                <div class="patient-item" onclick="viewPatient('Sophie Bernard')">
-                                    <div class="patient-avatar">SB</div>
-                                    <div class="patient-info">
-                                        <h4>Sophie Bernard</h4>
-                                        <p>Greffe il y a 3 mois • Dernière visite: 10/10/2025</p>
-                                    </div>
-                                    <span class="patient-status status-attention">À surveiller</span>
-                                </div>
-
-                                <div class="patient-item" onclick="viewPatient('Pierre Moreau')">
-                                    <div class="patient-avatar">PM</div>
-                                    <div class="patient-info">
-                                        <h4>Pierre Moreau</h4>
-                                        <p>Greffe il y a 1 an • Dernière visite: 05/10/2025</p>
-                                    </div>
-                                    <span class="patient-status status-urgent">Urgent</span>
-                                </div>
+                                <p style="text-align: center; color: #666; padding: 20px;">Chargement des patients...</p>
                             </div>
                         </div>
 
@@ -777,38 +743,7 @@ body {
                                 </div>
 
                                 <div id="todayAppointments">
-                                    <div class="appointment-item">
-                                        <div class="appointment-time">
-                                            <div class="time">09:00</div>
-                                            <div class="duration">30 min</div>
-                                        </div>
-                                        <div class="appointment-details">
-                                            <h4>Sophie Martin</h4>
-                                            <p>Consultation de suivi post-greffe</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="appointment-item">
-                                        <div class="appointment-time">
-                                            <div class="time">10:30</div>
-                                            <div class="duration">45 min</div>
-                                        </div>
-                                        <div class="appointment-details">
-                                            <h4>Pierre Moreau</h4>
-                                            <p>Contrôle urgence - Fièvre</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="appointment-item">
-                                        <div class="appointment-time">
-                                            <div class="time">14:00</div>
-                                            <div class="duration">30 min</div>
-                                        </div>
-                                        <div class="appointment-details">
-                                            <h4>Jean Dupont</h4>
-                                            <p>Bilan sanguin de contrôle</p>
-                                        </div>
-                                    </div>
+                                    <p style="text-align: center; color: #666; padding: 20px;">Aucun rendez-vous chargé.</p>
                                 </div>
                             </div>
 
@@ -882,48 +817,14 @@ body {
                         </div>
 
                         <div class="tabs">
-                            <button class="tab active" onclick="filterPatients('all')">Tous (42)</button>
-                            <button class="tab" onclick="filterPatients('urgent')">Urgents (3)</button>
-                            <button class="tab" onclick="filterPatients('attention')">À surveiller (8)</button>
-                            <button class="tab" onclick="filterPatients('stable')">Stables (31)</button>
+                            <button class="tab active" onclick="filterPatients('all')">Tous</button>
+                            <button class="tab" onclick="filterPatients('urgent')">Urgents</button>
+                            <button class="tab" onclick="filterPatients('attention')">À surveiller</button>
+                            <button class="tab" onclick="filterPatients('stable')">Stables</button>
                         </div>
 
                         <div id="allPatientsList">
-                            <div class="patient-item" data-priority="urgent" onclick="viewPatient('Pierre Moreau')">
-                                <div class="patient-avatar">PM</div>
-                                <div class="patient-info">
-                                    <h4>Pierre Moreau</h4>
-                                    <p>Greffe: 05/10/2024 • Créatinine: 245 mg/L ⚠️</p>
-                                </div>
-                                <span class="patient-status status-urgent">Urgent</span>
-                            </div>
-
-                            <div class="patient-item" data-priority="attention" onclick="viewPatient('Sophie Bernard')">
-                                <div class="patient-avatar">SB</div>
-                                <div class="patient-info">
-                                    <h4>Sophie Bernard</h4>
-                                    <p>Greffe: 15/07/2025 • Tension: 145/90 mmHg</p>
-                                </div>
-                                <span class="patient-status status-attention">À surveiller</span>
-                            </div>
-
-                            <div class="patient-item" data-priority="stable" onclick="viewPatient('Sophie Martin')">
-                                <div class="patient-avatar">SM</div>
-                                <div class="patient-info">
-                                    <h4>Sophie Martin</h4>
-                                    <p>Greffe: 15/03/2025 • Tous les paramètres normaux</p>
-                                </div>
-                                <span class="patient-status status-stable">Stable</span>
-                            </div>
-
-                            <div class="patient-item" data-priority="stable" onclick="viewPatient('Jean Dupont')">
-                                <div class="patient-avatar">JD</div>
-                                <div class="patient-info">
-                                    <h4>Jean Dupont</h4>
-                                    <p>Greffe: 10/01/2024 • Évolution positive</p>
-                                </div>
-                                <span class="patient-status status-stable">Stable</span>
-                            </div>
+                            <p style="text-align: center; color: #666; padding: 40px;">Chargement des patients...</p>
                         </div>
                     </div>
                 </div>
@@ -942,23 +843,7 @@ body {
                         </div>
 
                         <div id="managePatientsList">
-                            <div class="patient-item" onclick="editPatient('Sophie Martin')">
-                                <div class="patient-avatar">SM</div>
-                                <div class="patient-info">
-                                    <h4>Sophie Martin</h4>
-                                    <p>sophie.martin@email.fr • 06 12 34 56 78</p>
-                                </div>
-                                <button class="btn-primary" style="width: auto; padding: 8px 16px;">✏️ Modifier</button>
-                            </div>
-
-                            <div class="patient-item" onclick="editPatient('Jean Dupont')">
-                                <div class="patient-avatar">JD</div>
-                                <div class="patient-info">
-                                    <h4>Jean Dupont</h4>
-                                    <p>jean.dupont@email.fr • 06 23 45 67 89</p>
-                                </div>
-                                <button class="btn-primary" style="width: auto; padding: 8px 16px;">✏️ Modifier</button>
-                            </div>
+                            <p style="text-align: center; color: #666; padding: 20px;">Chargement des patients...</p>
                         </div>
                     </div>
                 </div>
@@ -992,10 +877,6 @@ body {
                         <div class="search-bar">
                             <select id="patientSelect" class="search-input" onchange="loadPatientData()">
                                 <option value="">Sélectionner un patient...</option>
-                                <option value="Sophie Martin">Sophie Martin</option>
-                                <option value="Jean Dupont">Jean Dupont</option>
-                                <option value="Pierre Moreau">Pierre Moreau</option>
-                                <option value="Sophie Bernard">Sophie Bernard</option>
                             </select>
                             <button class="btn-primary" onclick="loadPatientData()">Charger les données</button>
                         </div>

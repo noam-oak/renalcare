@@ -53,7 +53,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Charger les patients récents sur le dashboard
   loadRecentPatientsOnDashboard();
+
+  // Alimenter le sélecteur de patients pour le suivi
+  populatePatientSelect();
 });
+
+// Remplit le select du suivi avec les patients affectés
+async function populatePatientSelect() {
+  const select = document.getElementById('patientSelect');
+  if (!select) return;
+
+  // Réinitialiser avec l'option placeholder
+  select.innerHTML = '<option value="">Sélectionner un patient...</option>';
+
+  try {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch('/api/medecin/patients', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur lors du chargement des patients');
+    }
+
+    const data = await response.json();
+    const patients = dedupePatients(data.patients || []);
+    if (!data.success || patients.length === 0) {
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = 'Aucun patient affecté';
+      select.appendChild(emptyOption);
+      return;
+    }
+
+    patients.forEach((patient) => {
+      const opt = document.createElement('option');
+      opt.value = patient.id;
+      opt.textContent = `${patient.prenom} ${patient.nom}`.trim();
+      select.appendChild(opt);
+    });
+
+  } catch (error) {
+    console.error('Erreur chargement select patients:', error);
+    const errorOption = document.createElement('option');
+    errorOption.value = '';
+    errorOption.textContent = 'Erreur de chargement';
+    select.appendChild(errorOption);
+  }
+}
 
 // Fonction pour charger les patients non affectés
 async function loadUnassignedPatientsIfNeeded() {
@@ -107,14 +157,17 @@ async function loadUnassignedPatients() {
     // Afficher les patients
     listContainer.innerHTML = data.patients.map(patient => {
       const initials = getInitials(patient.prenom, patient.nom);
-      const dateInscription = new Date(patient.created_at).toLocaleDateString('fr-FR');
+      const birthDate = patient.date_naissance
+        ? new Date(patient.date_naissance).toLocaleDateString('fr-FR')
+        : 'Date inconnue';
+      const contact = [patient.email, patient.telephone].filter(Boolean).join(' • ');
       
       return `
         <div class="patient-item" style="cursor: default;">
           <div class="patient-avatar">${initials}</div>
           <div class="patient-info">
             <h4>${patient.prenom} ${patient.nom}</h4>
-            <p>${patient.email} • Inscrit le ${dateInscription}</p>
+            <p>${contact || 'Contact non renseigné'} • Naissance: ${birthDate}</p>
           </div>
           <button class="btn-primary" style="width: auto; padding: 8px 16px;" 
                   onclick="assignPatientToMe('${patient.id}', '${patient.prenom}', '${patient.nom}')">
@@ -135,6 +188,19 @@ function getInitials(prenom, nom) {
   const p = (prenom || '').charAt(0).toUpperCase();
   const n = (nom || '').charAt(0).toUpperCase();
   return p + n;
+}
+
+// Déduplique une liste de patients en normalisant l'id (string) et le fallback nom/prénom/email en minuscule
+function dedupePatients(patients = []) {
+  const seen = new Set();
+  return patients.filter((p) => {
+    const key = (p?.id !== undefined && p?.id !== null)
+      ? String(p.id)
+      : `${(p?.prenom || '').toLowerCase()}|${(p?.nom || '').toLowerCase()}|${(p?.email || '').toLowerCase()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 // Fonction pour affecter un patient au médecin connecté
@@ -185,36 +251,50 @@ function searchUnassignedPatients() {
 
 // Fonction pour charger les patients affectés au médecin
 async function loadAssignedPatientsIfNeeded() {
-  const patientsPage = document.getElementById('page-patients');
-  if (!patientsPage) return;
+  const targetPageIds = ['page-patients', 'page-gestion'];
+  const observers = [];
 
-  // Observer les changements de page
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.attributeName === 'class' && patientsPage.classList.contains('active')) {
-        loadAssignedPatients();
-      }
+  targetPageIds.forEach((pageId) => {
+    const pageEl = document.getElementById(pageId);
+    if (!pageEl) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class' && pageEl.classList.contains('active')) {
+          loadAssignedPatients();
+        }
+      });
     });
+
+    observer.observe(pageEl, { attributes: true });
+    observers.push(observer);
+
+    if (pageEl.classList.contains('active')) {
+      loadAssignedPatients();
+    }
   });
 
-  observer.observe(patientsPage, { attributes: true });
-
-  // Charger immédiatement si la page est déjà active
-  if (patientsPage.classList.contains('active')) {
-    loadAssignedPatients();
-  }
+  // Précharger pour mettre à jour les compteurs dès l'arrivée sur le dashboard
+  if (!observers.length) return;
+  loadAssignedPatients();
 }
 
 // Fonction pour charger la liste des patients affectés au médecin
 async function loadAssignedPatients() {
   const listContainer = document.getElementById('allPatientsList');
-  if (!listContainer) return;
+  const manageList = document.getElementById('managePatientsList');
+  if (!listContainer && !manageList) return;
 
   try {
-    listContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Chargement des patients...</p>';
+    if (listContainer) {
+      listContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Chargement des patients...</p>';
+    }
+    if (manageList) {
+      manageList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Chargement des patients...</p>';
+    }
 
     const token = localStorage.getItem('auth_token');
-    const response = await fetch('/api/medecin/mes-patients', {
+    const response = await fetch('/api/medecin/patients', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -226,35 +306,69 @@ async function loadAssignedPatients() {
     }
 
     const data = await response.json();
+    const patients = dedupePatients(data.patients || []);
     
-    if (!data.success || !data.patients || data.patients.length === 0) {
-      listContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Aucun patient affecté. Consultez la section "Patients non affectés" pour en ajouter.</p>';
+    if (!data.success || patients.length === 0) {
+      if (listContainer) {
+        listContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Aucun patient affecté. Consultez la section "Patients non affectés" pour en ajouter.</p>';
+      }
+      if (manageList) {
+        manageList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucun patient affecté pour le moment.</p>';
+      }
+      updatePatientsCount(0);
+      populatePatientSelect();
       return;
     }
 
     // Afficher les patients
-    listContainer.innerHTML = data.patients.map(patient => {
-      const initials = getInitials(patient.prenom, patient.nom);
-      const dateInscription = new Date(patient.created_at).toLocaleDateString('fr-FR');
-      
-      return `
-        <div class="patient-item" data-priority="stable" onclick="viewPatient('${patient.prenom} ${patient.nom}')">
-          <div class="patient-avatar">${initials}</div>
-          <div class="patient-info">
-            <h4>${patient.prenom} ${patient.nom}</h4>
-            <p>${patient.email} • Inscrit le ${dateInscription}</p>
+    if (listContainer) {
+      listContainer.innerHTML = patients.map(patient => {
+        const initials = getInitials(patient.prenom, patient.nom);
+        const contact = [patient.email, patient.telephone].filter(Boolean).join(' • ');
+        const address = patient.adresse_postale ? ` • ${patient.adresse_postale}` : '';
+        
+        return `
+          <div class="patient-item" data-priority="stable" onclick="viewPatient('${patient.prenom} ${patient.nom}')">
+            <div class="patient-avatar">${initials}</div>
+            <div class="patient-info">
+              <h4>${patient.prenom} ${patient.nom}</h4>
+              <p>${contact || 'Contact non renseigné'}${address}</p>
+            </div>
+            <span class="patient-status status-stable">Affecté</span>
           </div>
-          <span class="patient-status status-stable">Affecté</span>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
+    }
 
-    // Mettre à jour le compteur
-    updatePatientsCount(data.patients.length);
+    if (manageList) {
+      manageList.innerHTML = patients.map(patient => {
+        const initials = getInitials(patient.prenom, patient.nom);
+        const contact = [patient.email, patient.telephone].filter(Boolean).join(' • ');
+        
+        return `
+          <div class="patient-item">
+            <div class="patient-avatar">${initials}</div>
+            <div class="patient-info">
+              <h4>${patient.prenom} ${patient.nom}</h4>
+              <p>${contact || 'Contact non renseigné'}</p>
+            </div>
+            <button class="btn-primary" style="width: auto; padding: 8px 16px;" onclick="editPatient('${patient.prenom} ${patient.nom}')">✏️ Modifier</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    updatePatientsCount(patients.length);
+    populatePatientSelect();
 
   } catch (error) {
     console.error('Erreur:', error);
-    listContainer.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 40px;">❌ Erreur lors du chargement des patients</p>';
+    if (listContainer) {
+      listContainer.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 40px;">❌ Erreur lors du chargement des patients</p>';
+    }
+    if (manageList) {
+      manageList.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 20px;">❌ Erreur lors du chargement des patients</p>';
+    }
   }
 }
 
@@ -281,7 +395,7 @@ async function loadRecentPatientsOnDashboard() {
 
   try {
     const token = localStorage.getItem('auth_token');
-    const response = await fetch('/api/medecin/mes-patients', {
+    const response = await fetch('/api/medecin/patients', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -294,25 +408,26 @@ async function loadRecentPatientsOnDashboard() {
     }
 
     const data = await response.json();
+    const patients = dedupePatients(data.patients || []);
     
-    if (!data.success || !data.patients || data.patients.length === 0) {
+    if (!data.success || patients.length === 0) {
       recentList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucun patient affecté</p>';
       return;
     }
 
     // Afficher les 4 patients les plus récents
-    const recentPatients = data.patients.slice(0, 4);
+    const recentPatients = patients.slice(0, 4);
     
     recentList.innerHTML = recentPatients.map(patient => {
       const initials = getInitials(patient.prenom, patient.nom);
-      const dateInscription = new Date(patient.created_at).toLocaleDateString('fr-FR');
+      const contact = [patient.email, patient.telephone].filter(Boolean).join(' • ');
       
       return `
         <div class="patient-item" onclick="viewPatient('${patient.prenom} ${patient.nom}')">
           <div class="patient-avatar">${initials}</div>
           <div class="patient-info">
             <h4>${patient.prenom} ${patient.nom}</h4>
-            <p>Inscrit le ${dateInscription}</p>
+            <p>${contact || 'Patient affecté'}</p>
           </div>
           <span class="patient-status status-stable">Stable</span>
         </div>
@@ -322,7 +437,7 @@ async function loadRecentPatientsOnDashboard() {
     // Mettre à jour le compteur total sur le dashboard
     const totalPatientsElement = document.getElementById('totalPatients');
     if (totalPatientsElement) {
-      totalPatientsElement.textContent = data.patients.length;
+      totalPatientsElement.textContent = patients.length;
     }
 
   } catch (error) {

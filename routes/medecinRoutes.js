@@ -45,11 +45,11 @@ router.get('/patients-non-affectes', authenticateMedecin, async (req, res) => {
     try {
         // Récupérer tous les patients qui n'ont pas de id_utilisateur_medecin
         const patients = await sql`
-            SELECT id, prenom, nom, email, date_naissance, telephone, adresse_postale, created_at
+            SELECT id, prenom, nom, email, date_naissance, telephone, adresse_postale
             FROM utilisateur 
             WHERE role = 'Patient' 
             AND (id_utilisateur_medecin IS NULL OR id_utilisateur_medecin = 0)
-            ORDER BY created_at DESC
+            ORDER BY id DESC
         `;
 
         res.json({ success: true, patients: patients || [] });
@@ -116,10 +116,39 @@ router.get('/mes-patients', authenticateMedecin, async (req, res) => {
     try {
         // Récupérer tous les patients affectés à ce médecin
         const patients = await sql`
-            SELECT id, prenom, nom, email, date_naissance, telephone, adresse_postale, created_at
+            SELECT id, prenom, nom, email, date_naissance, telephone, adresse_postale
             FROM utilisateur 
             WHERE role = 'Patient' 
             AND id_utilisateur_medecin = ${req.userId}
+            ORDER BY nom ASC, prenom ASC
+        `;
+
+        res.json({ success: true, patients: patients || [] });
+    } catch (error) {
+        console.error('Erreur:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+});
+
+// GET patients d'un médecin spécifique (sécurisé : uniquement pour le médecin connecté)
+router.get('/patients', authenticateMedecin, async (req, res) => {
+    try {
+        const requestedId = req.query.medecinId ? parseInt(req.query.medecinId, 10) : req.userId;
+
+        if (!requestedId || Number.isNaN(requestedId)) {
+            return res.status(400).json({ success: false, message: 'ID médecin invalide' });
+        }
+
+        // Sécurité : un médecin ne peut voir que ses propres patients
+        if (requestedId !== req.userId) {
+            return res.status(403).json({ success: false, message: 'Accès refusé' });
+        }
+
+        const patients = await sql`
+            SELECT id, prenom, nom, email, date_naissance, telephone, adresse_postale
+            FROM utilisateur
+            WHERE role = 'Patient'
+            AND id_utilisateur_medecin = ${requestedId}
             ORDER BY nom ASC, prenom ASC
         `;
 
