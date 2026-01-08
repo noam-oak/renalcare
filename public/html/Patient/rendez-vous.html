@@ -48,4 +48,22 @@
     </div>
 </body>
 
+<div class="remote-chatbot" id="remoteChatbot">
+    <button class="remote-chatbot__toggle" id="remoteChatbotToggle" aria-label="Ouvrir le chatbot médical">
+        💬
+        <span class="remote-chatbot__badge">IA</span>
+    </button>
+    <iframe src="https://izadine.pythonanywhere.com/" title="Chatbot médical IA" loading="lazy"></iframe>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const wrapper = document.getElementById('remoteChatbot');
+        const toggle = document.getElementById('remoteChatbotToggle');
+        if (wrapper && toggle) {
+            toggle.addEventListener('click', () => wrapper.classList.toggle('open'));
+        }
+    });
+    </script>
+
 </html>

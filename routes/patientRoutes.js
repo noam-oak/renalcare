@@ -41,6 +41,20 @@ router.get('/:id/profile', async (req, res) => {
   }
 });
 
+// Récupérer ou créer un dossier médical pour le patient connecté
+router.get('/:id/dossier-id', authenticatePatient, async (req, res) => {
+  try {
+    const result = await resolveDossierForPatient(req.patientId, null);
+    if (!result.dossierId) {
+      return res.status(404).json({ success: false, error: 'Dossier introuvable' });
+    }
+    return res.json({ success: true, dossier_id: result.dossierId, created: result.created });
+  } catch (err) {
+    console.error('Erreur récupération dossier_id patient:', err);
+    return res.status(500).json({ success: false, error: err.message || 'Impossible de récupérer le dossier' });
+  }
+});
+
 // Données de tableau de bord patient
 router.get('/:id/dashboard', authenticatePatient, async (req, res) => {
   try {
