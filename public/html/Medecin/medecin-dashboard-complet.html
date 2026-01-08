@@ -768,6 +768,25 @@
             gap: 14px;
         }
 
+        .selected-patient-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #eef2ff;
+            color: #312e81;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .selected-patient-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6366f1;
+        }
+
         .data-tile.muted {
             background: #f3f4f6;
             color: #7a7a7a;
@@ -1109,6 +1128,10 @@
                     <div class="card">
                         <div class="card-header">
                             <h2>Suivi des Données Patients</h2>
+                            <div id="selectedPatientBadge" class="selected-patient-badge" style="display:none;">
+                                <span class="dot"></span>
+                                <span id="selectedPatientName">Sélectionnez un patient</span>
+                            </div>
                         </div>
 
                         <div id="suiviNotice"
@@ -2561,6 +2584,7 @@
 
         function resetSuiviUI() {
             currentPatientResponses = [];
+            currentPatientLabel = '';
 
             const resetCards = () => {
                 const map = {
@@ -2599,6 +2623,11 @@
                 history.innerHTML = `<p style="text-align: center; color: #666; padding: 20px;">Sélectionnez un patient pour voir l'historique des questionnaires.</p>`;
             }
 
+            const badge = document.getElementById('selectedPatientBadge');
+            const badgeName = document.getElementById('selectedPatientName');
+            if (badge) badge.style.display = 'none';
+            if (badgeName) badgeName.textContent = 'Sélectionnez un patient';
+
             const symptomesData = document.getElementById('symptomesData');
             if (symptomesData) {
                 symptomesData.innerHTML = `<p style="text-align: center; color: #666; padding: 40px;">Sélectionnez un patient pour voir les symptômes</p>`;
@@ -2619,11 +2648,16 @@
             const patientLabel = selectEl.options[selectEl.selectedIndex]?.textContent || '';
             currentPatientLabel = patientLabel;
             const notice = document.getElementById('suiviNotice');
+            const badge = document.getElementById('selectedPatientBadge');
+            const badgeName = document.getElementById('selectedPatientName');
 
             if (!patientId) {
                 resetSuiviUI();
                 return;
             }
+
+            if (badge) badge.style.display = 'inline-flex';
+            if (badgeName) badgeName.textContent = patientLabel || 'Patient';
 
             const responses = await fetchPatientResponses(patientId);
             currentPatientResponses = responses || [];
