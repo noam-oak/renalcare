@@ -7,6 +7,7 @@
     <title>Questionnaires - Suivi Greffe Rénale</title>
     <link rel="stylesheet" href="../../style/patient.css">
     <script src="/js/sidebar.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
     <script src="/js/patient-questionnaire.js" defer></script>
 </head>
 
@@ -23,18 +24,6 @@
             </header>
 
             <div class="content">
-                <section class="card" style="margin-bottom: 25px;">
-                    <div class="card-header">
-                        <div>
-                            <h2>Questionnaire clinique avancé</h2>
-                            <p class="text-muted-foreground">Analyse complète de votre greffe : symptômes, constantes vitales et bilans biologiques.</p>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <p class="text-sm">Prenez quelques minutes pour répondre à ce questionnaire détaillé. Les résultats vous offriront une synthèse claire et des recommandations personnalisées à partager avec votre équipe soignante.</p>
-                    </div>
-                </section>
-
                 <section id="questionnaireApp">
                     <div id="form-container"></div>
                     <div id="results-container" style="display: none;"></div>

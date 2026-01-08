@@ -7,6 +7,7 @@
     <title>Mes Résultats - Suivi Greffe Rénale</title>
     <link rel="stylesheet" href="../../style/patient.css">
     <script src="/js/sidebar.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="/js/patient-results.js" defer></script>
 </head>
@@ -55,6 +56,13 @@
                         <canvas id="results-chart" aria-label="Graphique des derniers bilans" role="img"></canvas>
                         <p class="chart-empty" id="results-chart-empty" style="display:none; text-align:center; padding:1rem;">Aucune donnée pour le moment.</p>
                     </div>
+                </div>
+
+                <div class="card" id="historic-detail-card" style="display:none;">
+                    <div class="card-header">
+                        <h2 id="historic-detail-title">Questionnaire sélectionné</h2>
+                    </div>
+                    <div class="card-content" id="historic-detail-content"></div>
                 </div>
 
                 <div class="card">

@@ -77,6 +77,7 @@ let formData = {
 }
 
 let lastAnalysisResults = null
+let historicInterpretationMode = false
 
 function renderForm() {
   const formContainer = document.getElementById("form-container")
@@ -858,6 +859,12 @@ function renderResults(results, saveStatus = null) {
                             </svg>
                             Copier pour IA
                         </button>
+                        <button type="button" class="button button-outline" onclick="downloadPdf()">
+                          <svg class="w-4 h-4" style="margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v16c0 1.105.895 2 2 2h12a2 2 0 002-2V4M8 4h8M12 11v6m0 0l-3-3m3 3l3-3"></path>
+                          </svg>
+                          Télécharger le PDF
+                        </button>
                         <button type="button" class="button button-outline" onclick="resetForm()">
                             <svg class="w-4 h-4" style="margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -959,7 +966,10 @@ function resetForm() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   await preloadDossierId()
-  renderForm()
+  await maybeLoadHistoricResponse()
+  if (!historicInterpretationMode) {
+    renderForm()
+  }
 })
 
 function copyToClipboard() {
@@ -986,6 +996,147 @@ function copyToClipboard() {
     console.error('Erreur lors de la copie :', err)
     alert('Impossible de copier le texte automatiquement.')
   })
+}
+
+function formatValueWithUnit(value, unit) {
+  if (value === null || value === undefined || value === '') return '—';
+  return `${value} ${unit || ''}`.trim()
+}
+
+function downloadPdf() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert('PDF non disponible: librairie manquante.');
+    return;
+  }
+  if (!lastAnalysisResults) {
+    alert('Générez d’abord les résultats pour créer le PDF.');
+    return;
+  }
+
+  const doc = new window.jspdf.jsPDF();
+  const margin = 15;
+
+  doc.setFontSize(14);
+  doc.text('www.renalcare.fr', 105, margin, { align: 'center' });
+
+  doc.setFontSize(18);
+  doc.text('Synthèse questionnaire patient', 105, margin + 10, { align: 'center' });
+
+  doc.setFontSize(12);
+  const dateLabel = formData.date_questionnaire
+    ? new Date(formData.date_questionnaire).toLocaleDateString('fr-FR')
+    : 'Date non précisée';
+  doc.text(`Date du questionnaire : ${dateLabel}`, margin, margin + 20);
+  doc.text(`DFG estimé : ${lastAnalysisResults.dfg} mL/min/1.73m²`, margin, margin + 28);
+  doc.text(`Stade : ${lastAnalysisResults.stageLabel}`, margin, margin + 36);
+
+  const alerts = lastAnalysisResults.criticalAlerts || [];
+  if (alerts.length) {
+    doc.setTextColor(200, 0, 0);
+    doc.text('Alertes critiques détectées :', margin, margin + 46);
+    doc.setTextColor(0, 0, 0);
+    alerts.slice(0, 4).forEach((a, idx) => {
+      doc.text(`- ${a}`, margin + 4, margin + 54 + idx * 8);
+    });
+  }
+
+  const tableTitleY = alerts.length ? margin + 54 + alerts.length * 8 + 8 : margin + 46;
+  doc.setFontSize(13);
+  doc.text('Valeurs mesurées', margin, tableTitleY);
+
+  const rows = [
+    ['Poids', formatValueWithUnit(formData.poids, 'kg')],
+    ['Créatinine', formatValueWithUnit(formData.creatinine, 'mg/L')],
+    ['Tension', formData.tension_systolique && formData.tension_diastolique ? `${formData.tension_systolique}/${formData.tension_diastolique} mmHg` : '—'],
+    ['Température', formatValueWithUnit(formData.temperature, '°C')],
+    ['Glycémie', formatValueWithUnit(formData.glycemie, 'g/L')],
+    ['Hémoglobine', formatValueWithUnit(formData.hemoglobine, 'g/dL')],
+    ['Tacrolimus', formatValueWithUnit(formData.tacrolimus_ng, 'ng/mL')],
+    ['Évérolimus', formatValueWithUnit(formData.everolimus_ng, 'ng/mL')],
+    ['Fréquence cardiaque', formatValueWithUnit(formData.frequence_cardiaque, 'bpm')],
+    ['Fréquence urinaire', formData.frequence_urinaire ? `${formData.frequence_urinaire} fois/jour` : '—'],
+  ];
+
+  const tableY = tableTitleY + 6;
+  const rowHeight = 8;
+  const tableWidth = 180;
+  const headerHeight = 10;
+  const totalHeight = headerHeight + rows.length * rowHeight;
+
+  doc.setDrawColor(200);
+  doc.rect(margin, tableY, tableWidth, totalHeight);
+  doc.line(margin, tableY + headerHeight, margin + tableWidth, tableY + headerHeight);
+  doc.line(margin + 100, tableY, margin + 100, tableY + totalHeight);
+
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.text('Paramètre', margin + 4, tableY + 7);
+  doc.text('Valeur', margin + 104, tableY + 7);
+  doc.setFont(undefined, 'normal');
+
+  rows.forEach((row, idx) => {
+    const y = tableY + headerHeight + (idx + 1) * rowHeight - 2;
+    doc.text(row[0], margin + 4, y);
+    doc.text(row[1], margin + 104, y);
+    doc.line(margin, tableY + headerHeight + (idx + 1) * rowHeight, margin + tableWidth, tableY + headerHeight + (idx + 1) * rowHeight);
+  });
+
+  doc.setFontSize(10);
+  doc.text('Document généré automatiquement pour interprétation médicale.', margin, 285);
+
+  doc.save('questionnaire-renalcare.pdf');
+}
+
+function applyRowToFormData(row) {
+  formData = {
+    date_questionnaire: row.date ? row.date.split('T')[0] : new Date().toISOString().split('T')[0],
+    poids: row.poids ?? '',
+    envie_uriner: row.envie_uriner ? Number(row.envie_uriner) : '',
+    frequence: row.frequence || 'non',
+    frequence_urinaire: row.frequence_urinaire ? Number(row.frequence_urinaire) : '',
+    douleur_miction: row.douleur_miction ? Number(row.douleur_miction) : '',
+    douleur_greffon: row.douleur_greffon ? Number(row.douleur_greffon) : '',
+    maux_ventre: row.maux_ventre ? Number(row.maux_ventre) : '',
+    diarrhee: !!row.diarrhee,
+    intensite_diarrhee: row.intensite_diarrhee ? Number(row.intensite_diarrhee) : '',
+    frissonnement: row.frissonnement || 'Non',
+    creatinine: row.creatinine ?? '',
+    tension_systolique: row.tension_systolique ?? '',
+    tension_diastolique: row.tension_diastolique ?? '',
+    frequence_cardiaque: row.frequence_cardiaque ?? '',
+    temperature: row.temperature ?? '',
+    glycemie: row.glycemie ?? '',
+    hemoglobine: row.hemoglobine ?? '',
+    cholesterol: row.cholesterol ?? '',
+    tacrolimus_ng: row.tacrolimus_ng ?? '',
+    everolimus_ng: row.everolimus_ng ?? '',
+  }
+}
+
+async function maybeLoadHistoricResponse() {
+  const params = new URLSearchParams(window.location.search)
+  const reponseId = params.get('reponseId')
+  if (!reponseId) return
+
+  const userId = localStorage.getItem('user_id')
+  const token = localStorage.getItem('auth_token')
+  if (!userId || !token) return
+
+  try {
+    const resp = await fetch(`/api/patients/${userId}/reponses/${reponseId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!resp.ok) throw new Error('Chargement impossible')
+    const data = await resp.json()
+    if (!data.success || !data.reponse) throw new Error(data.error || 'Réponse introuvable')
+
+    applyRowToFormData(data.reponse)
+    historicInterpretationMode = true
+    analyzeResults(null)
+  } catch (err) {
+    console.error('Historic load:', err)
+    historicInterpretationMode = false
+  }
 }
 
 function generateMedicalSummary(data, analysis) {

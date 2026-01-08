@@ -209,6 +209,38 @@ router.get('/:id/resultats', authenticatePatient, async (req, res) => {
   }
 });
 
+// Détail d'une réponse précise (vérifiée pour le patient courant)
+router.get('/:id/reponses/:reponseId', authenticatePatient, async (req, res) => {
+  try {
+    const dossier = await sql`
+      SELECT id
+      FROM dossier_medical
+      WHERE id_utilisateur = ${req.patientId}
+      LIMIT 1
+    `;
+
+    if (!dossier.length) {
+      return res.status(404).json({ success: false, error: 'Dossier introuvable' });
+    }
+
+    const row = await sql`
+      SELECT *
+      FROM reponse
+      WHERE id = ${req.params.reponseId} AND id_dossier_medical = ${dossier[0].id}
+      LIMIT 1
+    `;
+
+    if (!row.length) {
+      return res.status(404).json({ success: false, error: 'Réponse introuvable' });
+    }
+
+    return res.json({ success: true, reponse: row[0] });
+  } catch (err) {
+    console.error('Erreur récupération réponse détaillée:', err);
+    res.status(500).json({ success: false, error: 'Impossible de récupérer la réponse.' });
+  }
+});
+
 
 router.post('/:id/questionnaires', async (req, res) => {
   const patientId = req.params.id;
