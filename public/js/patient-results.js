@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadResults(userId, token);
 });
 
+let resultsChartInstance = null;
+
 async function loadResults(userId, token) {
   try {
     const resp = await fetch(`/api/patients/${userId}/resultats`, {
@@ -21,13 +23,30 @@ async function loadResults(userId, token) {
     if (!data.success) throw new Error(data.error || 'Erreur de chargement');
 
     const rows = data.resultats || [];
+    logHistory(rows);
     renderAlert(rows);
     renderLatest(rows);
     renderTimeline(rows);
+    renderChart(rows);
   } catch (err) {
     console.error('Mes résultats:', err);
     renderError(err.message);
   }
+}
+
+function logHistory(rows) {
+  if (!rows || !rows.length) return;
+  console.table(rows.map((r) => ({
+    date: r.date,
+    poids: r.poids,
+    creatinine: r.creatinine,
+    tension: r.tension_systolique && r.tension_diastolique ? `${r.tension_systolique}/${r.tension_diastolique}` : null,
+    temperature: r.temperature,
+    glycemie: r.glycemie,
+    hemoglobine: r.hemoglobine,
+    tacrolimus_ng: r.tacrolimus_ng,
+    everolimus_ng: r.everolimus_ng,
+  })));
 }
 
 function renderAlert(rows) {
@@ -113,6 +132,82 @@ function renderTimeline(rows) {
       </div>
     `;
   }).join('');
+}
+
+function renderChart(rows) {
+  const canvas = document.getElementById('results-chart');
+  const empty = document.getElementById('results-chart-empty');
+  if (!canvas || typeof Chart === 'undefined') {
+    return;
+  }
+
+  if (!rows.length) {
+    canvas.style.display = 'none';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+
+  canvas.style.display = 'block';
+  if (empty) empty.style.display = 'none';
+
+  const sorted = [...rows].sort((a, b) => new Date(a.date || a.created_at || 0) - new Date(b.date || b.created_at || 0));
+  const labels = sorted.map((r) => (r.date ? new Date(r.date).toLocaleDateString('fr-FR') : `#${r.id}`));
+
+  const series = [
+    { key: 'creatinine', label: 'Créatinine (mg/L)', color: '#ef4444' },
+    { key: 'poids', label: 'Poids (kg)', color: '#3b82f6' },
+    { key: 'tension_systolique', label: 'Tension systolique (mmHg)', color: '#f59e0b' },
+    { key: 'temperature', label: 'Température (°C)', color: '#10b981' },
+    { key: 'glycemie', label: 'Glycémie (g/L)', color: '#6366f1' },
+  ];
+
+  const datasets = series.map((serie) => ({
+    label: serie.label,
+    data: sorted.map((r) => (r[serie.key] === null || r[serie.key] === undefined ? null : Number(r[serie.key]))),
+    borderColor: serie.color,
+    backgroundColor: serie.color,
+    spanGaps: true,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    tension: 0.25,
+  })).filter((d) => d.data.some((v) => v !== null && !Number.isNaN(v)));
+
+  if (datasets.length === 0) {
+    canvas.style.display = 'none';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+
+  const ctx = canvas.getContext('2d');
+  if (resultsChartInstance) {
+    resultsChartInstance.destroy();
+  }
+
+  resultsChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false },
+      scales: {
+        x: {
+          ticks: { maxRotation: 45, minRotation: 0 },
+        },
+        y: {
+          title: { display: true, text: 'Valeurs' },
+        },
+      },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${ctx.formattedValue}`,
+          },
+        },
+      },
+    },
+  });
 }
 
 function renderError(message) {

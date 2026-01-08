@@ -183,7 +183,19 @@ router.get('/:id/resultats', authenticatePatient, async (req, res) => {
     }
 
     const responses = await sql`
-      SELECT id, date, creatinine, tension_systolique, tension_diastolique, temperature, poids
+      SELECT 
+        id,
+        date,
+        poids,
+        creatinine,
+        glycemie,
+        hemoglobine,
+        tension_systolique,
+        tension_diastolique,
+        frequence_cardiaque,
+        temperature,
+        tacrolimus_ng,
+        everolimus_ng
       FROM reponse
       WHERE id_dossier_medical = ${dossier[0].id}
       ORDER BY date DESC, id DESC
