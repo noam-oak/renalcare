@@ -114,7 +114,7 @@ async function loadLogs() {
     list.innerHTML = `<div class="log-item"><span class="log-time">Chargement...</span><span class="log-level info">INFO</span><span>Lecture des logs</span></div>`;
 
     try {
-        const res = await fetch('/api/admin/logs');
+        const res = await fetch('/api/admin/logs?limit=200');
         const data = await res.json();
 
         if (!data.success) {
@@ -128,6 +128,10 @@ async function loadLogs() {
         }
 
         list.innerHTML = logs.map((entry) => formatLogItem(entry.line)).join('');
+        const meta = document.getElementById('logs-meta');
+        if (meta) {
+            meta.textContent = `Affichage ${logs.length} lignes (max 200)`;
+        }
     } catch (err) {
         console.error('Logs admin:', err);
         list.innerHTML = `<div class="log-item"><span class="log-time">Erreur</span><span class="log-level error">ERROR</span><span>${err.message}</span></div>`;

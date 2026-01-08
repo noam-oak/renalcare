@@ -135,7 +135,7 @@ router.post('/refuse-account', async (req, res) => {
 });
 
 // Lecture des logs applicatifs (console/app.log)
-router.get('/logs', async (_req, res) => {
+router.get('/logs', async (req, res) => {
   try {
     const logPath = process.env.APP_LOG_PATH || path.join(__dirname, '..', 'app.log');
     if (!fs.existsSync(logPath)) {
@@ -143,14 +143,36 @@ router.get('/logs', async (_req, res) => {
     }
 
     const raw = await fs.promises.readFile(logPath, 'utf8');
-    // Renvoyer les 200 dernières lignes pour ne pas surcharger
-    const lines = raw.split(/\r?\n/).filter(Boolean);
-    const tail = lines.slice(-200).map((line, idx) => ({ id: idx, line }));
+    const maxLines = Math.min(Math.max(parseInt(req.query.limit, 10) || 200, 10), 1000);
+    const maxLen = 500;
 
-    res.json({ success: true, logs: tail });
+    const lines = raw.split(/\r?\n/).filter(Boolean);
+    const tail = lines
+      .slice(-maxLines)
+      .map((line, idx) => {
+        const truncated = line.length > maxLen ? `${line.slice(0, maxLen)}…` : line;
+        return { id: idx, line: truncated };
+      });
+
+    res.json({ success: true, logs: tail, total: lines.length, returned: tail.length });
   } catch (err) {
     console.error('Erreur lecture logs:', err);
     res.status(500).json({ success: false, error: 'Impossible de lire les logs.' });
+  }
+});
+
+// Télécharger le fichier brut de logs
+router.get('/logs/download', async (_req, res) => {
+  try {
+    const logPath = process.env.APP_LOG_PATH || path.join(__dirname, '..', 'app.log');
+    if (!fs.existsSync(logPath)) {
+      return res.status(404).json({ success: false, error: 'Fichier de logs introuvable.' });
+    }
+
+    res.download(logPath, 'app.log');
+  } catch (err) {
+    console.error('Erreur téléchargement logs:', err);
+    res.status(500).json({ success: false, error: 'Impossible de télécharger les logs.' });
   }
 });
 

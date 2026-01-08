@@ -2,6 +2,7 @@
 require('dotenv').config();
 
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const sql = require('./db');
 const app = express();
@@ -14,6 +15,25 @@ const adminRoutes = require('./routes/adminRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
 const medecinRoutes = require('./routes/medecinRoutes');
+
+// Simple file logger to mirror console output into app.log (or custom path)
+const LOG_PATH = process.env.APP_LOG_PATH || path.join(__dirname, 'app.log');
+const appendLog = (level, args) => {
+  const time = new Date().toISOString();
+  const line = `[${time}] ${level.toUpperCase()} ${args.map(a => {
+    try { return typeof a === 'string' ? a : JSON.stringify(a); }
+    catch { return String(a); }
+  }).join(' ')}\n`;
+  fs.appendFile(LOG_PATH, line, () => {});
+};
+
+['log', 'info', 'warn', 'error'].forEach((method) => {
+  const original = console[method].bind(console);
+  console[method] = (...args) => {
+    appendLog(method, args);
+    original(...args);
+  };
+});
 
 
 // Dossier public (HTML, CSS, JS statiques)

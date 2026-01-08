@@ -352,12 +352,17 @@
                     <div class="card">
                         <div class="card-header">
                             <h2>Logs Système</h2>
-                            <button class="btn-primary" onclick="loadLogs()">🔄 Rafraîchir</button>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <button class="btn-primary" onclick="loadLogs()">🔄 Rafraîchir</button>
+                                <a class="btn-secondary" href="/api/admin/logs/download" style="text-decoration:none;">⬇️ Exporter</a>
+                            </div>
                         </div>
 
                         <div class="tabs">
                             <button class="tab active">Tous</button>
                         </div>
+
+                        <div id="logs-meta" style="padding: 8px 0; color: #6c757d; font-size: 13px;">Affichage des logs...</div>
 
                         <div id="logs-list">
                             <div class="log-item">
