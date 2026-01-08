@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const sql = require('../db');
-const bcrypt = require('bcrypt');
 
 // Middleware pour vérifier le token et extraire l'ID du médecin
 const authenticateMedecin = async (req, res, next) => {

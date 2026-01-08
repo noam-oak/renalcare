@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const sql = require('../db');
-const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -52,7 +52,7 @@ router.post('/validate-account', async (req, res) => {
   try {
     // 1. Générer les identifiants
     const password = Math.random().toString(36).slice(-8); // Mot de passe aléatoire de 8 caractères
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     const securite_sociale = BigInt(Array.from({ length: 15 }, () => Math.floor(Math.random() * 10)).join(''));
     
     // 2. Préparer les données
