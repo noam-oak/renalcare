@@ -66,53 +66,47 @@ router.post('/validate-account', async (req, res) => {
     const birthDate = new Date(today.getFullYear() - 30, 0, 1);
     const date_naissance = birthDate.toISOString().split('T')[0];
 
-    // 3. Si l'email existe déjà, on met à jour le compte au lieu d'insérer
-    const existing = await sql`SELECT * FROM utilisateur WHERE email = ${request.email}`;
-    if (existing.length > 0) {
-      const user = existing[0];
-      const updated = await sql`
-        UPDATE utilisateur
-        SET mdp = ${hashedPassword},
-            role = ${role},
-            prenom = ${request.prenom || user.prenom},
-            nom = ${request.nom || user.nom},
-            telephone = ${request.telephone || user.telephone || '0000000000'},
-            adresse_postale = ${user.adresse_postale || adresse_postale},
-            securite_sociale = ${user.securite_sociale || securite_sociale.toString()},
-            date_naissance = ${user.date_naissance || date_naissance},
-            sexe = ${user.sexe ?? sexe},
-            id_utilisateur_medecin = ${id_utilisateur_medecin}
-        WHERE email = ${request.email}
-        RETURNING id
-      `;
-
-      if (!updated || updated.length === 0) {
-        throw new Error("Échec de la mise à jour du compte existant.");
-      }
-
-      await sendValidationEmail(request);
-      pendingRequestsStore.remove(request.id);
-      return res.json({ success: true, updated: true });
-    }
-
-    // 4. Insérer dans la base de données si le compte n'existe pas
-    const newUsers = await sql`
+    // 3. UPSERT pour éviter toute erreur de doublon (ON CONFLICT email)
+    const upserted = await sql`
       INSERT INTO utilisateur (email, mdp, securite_sociale, id_utilisateur_medecin, role, prenom, nom, date_naissance, sexe, telephone, adresse_postale)
-      VALUES (${request.email}, ${hashedPassword}, ${securite_sociale.toString()}, ${id_utilisateur_medecin}, ${role}, ${request.prenom}, ${request.nom}, ${date_naissance}, ${sexe}, ${request.telephone || '0000000000'}, ${adresse_postale})
+      VALUES (
+        ${request.email},
+        ${hashedPassword},
+        ${securite_sociale.toString()},
+        ${id_utilisateur_medecin},
+        ${role},
+        ${request.prenom},
+        ${request.nom},
+        ${date_naissance},
+        ${sexe},
+        ${request.telephone || '0000000000'},
+        ${adresse_postale}
+      )
+      ON CONFLICT (email) DO UPDATE SET
+        mdp = EXCLUDED.mdp,
+        role = EXCLUDED.role,
+        prenom = COALESCE(EXCLUDED.prenom, utilisateur.prenom),
+        nom = COALESCE(EXCLUDED.nom, utilisateur.nom),
+        telephone = COALESCE(EXCLUDED.telephone, utilisateur.telephone),
+        adresse_postale = COALESCE(EXCLUDED.adresse_postale, utilisateur.adresse_postale),
+        securite_sociale = COALESCE(EXCLUDED.securite_sociale, utilisateur.securite_sociale),
+        date_naissance = COALESCE(EXCLUDED.date_naissance, utilisateur.date_naissance),
+        sexe = COALESCE(EXCLUDED.sexe, utilisateur.sexe),
+        id_utilisateur_medecin = EXCLUDED.id_utilisateur_medecin
       RETURNING id
     `;
 
-    if (!newUsers || newUsers.length === 0) {
-        throw new Error("Erreur lors de l'insertion en base de données");
+    if (!upserted || upserted.length === 0) {
+        throw new Error("Échec de la création/mise à jour du compte.");
     }
 
-    // 5. Envoyer l'email avec le lien d'inscription
+    // 4. Envoyer l'email avec le lien d'inscription
     await sendValidationEmail(request);
     
-    // 6. Supprimer de la liste d'attente
+    // 5. Supprimer de la liste d'attente
     pendingRequestsStore.remove(request.id);
 
-    return res.json({ success: true, inserted: true });
+    return res.json({ success: true, upserted: true });
   } catch (err) {
     console.error('Erreur validate-account:', err);
     return res
