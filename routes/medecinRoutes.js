@@ -465,4 +465,23 @@ router.post('/patients/:id/traitements', (req, res) => {
     res.json({ success: true, message: `Traitement ajouté pour patient ${req.params.id}` });
 });
 
+// Alertes critiques liées aux questionnaires
+router.get('/alerts', authenticateMedecin, async (req, res) => {
+    try {
+        const alerts = await sql`
+            SELECT id, date, message
+            FROM messagerie
+            WHERE id_utilisateur = ${req.userId}
+            AND message ILIKE 'ALERTE%'
+            ORDER BY date DESC, id DESC
+            LIMIT 20
+        `;
+
+        res.json({ success: true, alerts });
+    } catch (error) {
+        console.error('Erreur chargement alertes médecin:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+});
+
 module.exports = router;

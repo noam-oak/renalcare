@@ -59,6 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Activer les barres de recherche
   setupMedecinSearchBars();
+
+  // Charger alertes critiques
+  loadCriticalAlerts();
 });
 
 let assignedPatients = [];
@@ -66,6 +69,49 @@ let patientsSearchTerm = '';
 let managePatientsSearchTerm = '';
 let patientSelectSearchTerm = '';
 let patientSelectRendered = false;
+let alertsCache = [];
+
+async function loadCriticalAlerts() {
+  const alertsContainer = document.getElementById('alertsList');
+  const alertCountEl = document.getElementById('alertCount');
+  const token = localStorage.getItem('auth_token');
+
+  if (!alertsContainer) return;
+
+  try {
+    const resp = await fetch('/api/medecin/alerts', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!resp.ok) throw new Error('Chargement des alertes impossible');
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.message || 'Erreur alertes');
+
+    alertsCache = data.alerts || [];
+    if (alertCountEl) alertCountEl.textContent = alertsCache.length || '0';
+
+    if (!alertsCache.length) {
+      alertsContainer.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Aucune alerte critique</p>';
+      return;
+    }
+
+    alertsContainer.innerHTML = alertsCache.map((a) => {
+      const dateText = a.date ? new Date(a.date).toLocaleDateString('fr-FR') : '';
+      return `
+        <div class="alert alert-warning">
+          <span class="alert-icon">⚠️</span>
+          <div class="alert-content">
+            <h4>Alerte questionnaire</h4>
+            <p>${a.message || 'Valeurs critiques détectées'} ${dateText ? '• ' + dateText : ''}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Alertes critiques:', err);
+    alertsContainer.innerHTML = '<p style="text-align:center; color:#e74c3c; padding:20px;">Erreur de chargement des alertes</p>';
+    if (alertCountEl) alertCountEl.textContent = '--';
+  }
+}
 
 // Remplit le select du suivi avec les patients affectés
 async function populatePatientSelect() {

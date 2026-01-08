@@ -417,6 +417,25 @@ router.post('/:id/reponses', async (req, res) => {
       RETURNING *
     `;
 
+    // Génération d'alerte médecin en cas de valeurs critiques
+    try {
+      const alertMsg = buildCriticalAlertMessage(req.body);
+      if (alertMsg) {
+        const medIdRows = await sql`select id_utilisateur_medecin from utilisateur where id = ${patientId} limit 1`;
+        const medId = medIdRows?.[0]?.id_utilisateur_medecin;
+        if (medId) {
+          const today = new Date();
+          const todayDate = today.toISOString().split('T')[0];
+          await sql`
+            insert into messagerie (date, message, id_utilisateur)
+            values (${todayDate}, ${alertMsg}, ${medId})
+          `;
+        }
+      }
+    } catch (alertErr) {
+      console.error('Alerte medecin non envoyée:', alertErr);
+    }
+
     return res.json({
       success: true,
       reponse: inserted[0],
@@ -430,6 +449,39 @@ router.post('/:id/reponses', async (req, res) => {
       .json({ success: false, error: "Impossible d'enregistrer la reponse", details: err.message });
   }
 });
+
+function buildCriticalAlertMessage(body) {
+  const num = (v) => (v === null || v === undefined ? null : Number(v));
+  const flags = [];
+
+  const creat = num(body.creatinine);
+  const ts = num(body.tension_systolique);
+  const td = num(body.tension_diastolique);
+  const temp = num(body.temperature);
+  const gly = num(body.glycemie);
+  const hgb = num(body.hemoglobine);
+  const dg = num(body.douleur_greffon);
+  const fc = num(body.frequence_cardiaque);
+  const tac = num(body.tacrolimus_ng);
+  const eve = num(body.everolimus_ng);
+
+  if (creat !== null && creat > 150) flags.push('créatinine très élevée');
+  if (ts !== null && ts > 180) flags.push('tension systolique >180');
+  if (td !== null && td > 110) flags.push('tension diastolique >110');
+  if (temp !== null && temp > 38.5) flags.push('fièvre >38.5°C');
+  if (temp !== null && temp < 35) flags.push('hypothermie <35°C');
+  if (gly !== null && gly > 2.5) flags.push('glycémie >2.5 g/L');
+  if (gly !== null && gly < 0.5) flags.push('hypoglycémie <0.5 g/L');
+  if (hgb !== null && hgb < 8) flags.push('hémoglobine <8 g/dL');
+  if (dg !== null && dg >= 7) flags.push('douleur greffon >=7/10');
+  if (fc !== null && (fc > 120 || fc < 45)) flags.push('fréquence cardiaque critique');
+  if (tac !== null && (tac < 3 || tac > 7)) flags.push('tacrolimus hors cible');
+  if (eve !== null && eve > 8) flags.push('évérolimus toxique');
+
+  if (!flags.length) return null;
+
+  return `ALERTE QUESTIONNAIRE: ${flags.join(' | ')}`;
+}
 
 async function resolveDossierForPatient(patientId, requestedDossierId) {
   // 1) Si un id est fourni et existe, on l'utilise
