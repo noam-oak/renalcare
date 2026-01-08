@@ -55,7 +55,90 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Bouton de déconnexion
   setupLogoutButton();
+
+  // Charger les données du dashboard patient
+  loadPatientDashboard();
 });
+
+async function loadPatientDashboard() {
+  const userId = localStorage.getItem('user_id');
+  const token = localStorage.getItem('auth_token');
+  if (!userId || !token) return;
+
+  try {
+    const resp = await fetch(`/api/patients/${userId}/dashboard`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!resp.ok) throw new Error('Impossible de charger le tableau de bord');
+    const data = await resp.json();
+    if (!data.success) throw new Error(data.error || 'Erreur');
+
+    fillStats(data.stats);
+    fillInfos(data.info);
+    updateHeaderName(data.patient);
+    updateNotifications(data.stats);
+  } catch (err) {
+    console.error('Dashboard patient:', err);
+  }
+}
+
+function fillStats(stats = {}) {
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value ?? '—';
+  };
+
+  setText('stat-months', stats.months_post_greffe ?? '—');
+  setText('stat-rdv', stats.rdv_count ?? '0');
+  setText('stat-questionnaires', stats.questionnaires_en_attente ?? '0');
+  setText('stat-messages', stats.messages_non_lus ?? '0');
+}
+
+function fillInfos(info = {}) {
+  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '—');
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value ?? '—';
+  };
+
+  setText('info-greffe-date', fmtDate(info.date_greffe));
+  setText('info-medecin', info.medecin || '—');
+  setText('info-groupe', info.groupe_sanguin || '—');
+  setText('info-bilan', fmtDate(info.dernier_bilan));
+}
+
+function updateHeaderName(patient) {
+  if (!patient) return;
+  const prenom = patient.prenom || '';
+  const nom = patient.nom || '';
+  const initials = (prenom.charAt(0) + (nom.charAt(0) || '')).toUpperCase();
+
+  const welcomeTitle = document.querySelector('.header-left h1');
+  if (welcomeTitle) {
+    welcomeTitle.textContent = `Bonjour, ${prenom} ${nom}`.trim();
+  }
+
+  const subtitle = document.getElementById('dashboard-subtitle');
+  if (subtitle) {
+    subtitle.textContent = 'Voici votre suivi du jour';
+  }
+
+  const avatar = document.querySelector('.user-avatar');
+  if (avatar) avatar.textContent = initials || '--';
+
+  const headerName = document.querySelector('.user-info h3');
+  if (headerName) headerName.textContent = `${prenom} ${nom}`.trim() || 'Patient';
+}
+
+function updateNotifications(stats = {}) {
+  const badge = document.getElementById('notif-count');
+  if (badge) {
+    const total = (stats.messages_non_lus || 0) + (stats.questionnaires_en_attente || 0);
+    badge.textContent = total;
+  }
+}
 
 // Fonction pour la déconnexion
 function setupLogoutButton() {

@@ -7,6 +7,7 @@
     <title>Mon Traitement - Suivi Greffe Rénale</title>
     <link rel="stylesheet" href="../../style/patient.css">
     <script src="/js/sidebar.js" defer></script>
+    <script src="/js/patient-treatment.js" defer></script>
 </head>
 
 <body>
@@ -22,134 +23,22 @@
             </header>
 
             <div class="content">
-                <div class="alert-box">
-                    <span class="alert-icon">⚠️</span>
-                    <div class="alert-content">
-                        <h4>Rappel Important</h4>
-                        <p>N'oubliez pas votre prise d'Advagraf à 20:00 aujourd'hui</p>
-                    </div>
-                </div>
+                <div class="alert-box" id="treatmentAlert" style="display:none;"></div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h2>Traitement Immunosuppresseur</h2>
+                        <h2>Traitements prescrits</h2>
                     </div>
 
-                    <div class="treatment-schedule">
+                    <div id="treatmentList" class="treatment-schedule" style="min-height: 120px;">
                         <div class="medication-card">
                             <div class="medication-header">
                                 <div class="medication-name">
-                                    <div class="medication-icon">💊</div>
+                                    <div class="medication-icon">⏳</div>
                                     <div class="medication-info">
-                                        <h3>Advagraf (Tacrolimus)</h3>
-                                        <p>Immunosuppresseur - Inhibiteur de la calcineurine</p>
+                                        <h3>Chargement des prescriptions...</h3>
+                                        <p>Merci de patienter</p>
                                     </div>
-                                </div>
-                                <span class="medication-status status-active">Actif</span>
-                            </div>
-
-                            <div class="medication-details">
-                                <div class="detail-item">
-                                    <div class="detail-label">Dosage</div>
-                                    <div class="detail-value">5 mg</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Fréquence</div>
-                                    <div class="detail-value">2x/jour</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Voie</div>
-                                    <div class="detail-value">Orale</div>
-                                </div>
-                            </div>
-
-                            <div class="medication-schedule">
-                                <div class="schedule-time taken">
-                                    <div class="checkbox checked">✓</div>
-                                    <span class="time">08:00</span>
-                                    <span>Pris</span>
-                                </div>
-                                <div class="schedule-time">
-                                    <div class="checkbox"></div>
-                                    <span class="time">20:00</span>
-                                    <span>À prendre</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="medication-card">
-                            <div class="medication-header">
-                                <div class="medication-name">
-                                    <div class="medication-icon">💊</div>
-                                    <div class="medication-info">
-                                        <h3>Certican (Everolimus)</h3>
-                                        <p>Immunosuppresseur - Inhibiteur mTOR</p>
-                                    </div>
-                                </div>
-                                <span class="medication-status status-active">Actif</span>
-                            </div>
-
-                            <div class="medication-details">
-                                <div class="detail-item">
-                                    <div class="detail-label">Dosage</div>
-                                    <div class="detail-value">0.75 mg</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Fréquence</div>
-                                    <div class="detail-value">2x/jour</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Voie</div>
-                                    <div class="detail-value">Orale</div>
-                                </div>
-                            </div>
-
-                            <div class="medication-schedule">
-                                <div class="schedule-time taken">
-                                    <div class="checkbox checked">✓</div>
-                                    <span class="time">08:00</span>
-                                    <span>Pris</span>
-                                </div>
-                                <div class="schedule-time">
-                                    <div class="checkbox"></div>
-                                    <span class="time">20:00</span>
-                                    <span>À prendre</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="medication-card">
-                            <div class="medication-header">
-                                <div class="medication-name">
-                                    <div class="medication-icon">💊</div>
-                                    <div class="medication-info">
-                                        <h3>Prednisone</h3>
-                                        <p>Corticoïde - Anti-inflammatoire</p>
-                                    </div>
-                                </div>
-                                <span class="medication-status status-active">Actif</span>
-                            </div>
-
-                            <div class="medication-details">
-                                <div class="detail-item">
-                                    <div class="detail-label">Dosage</div>
-                                    <div class="detail-value">5 mg</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Fréquence</div>
-                                    <div class="detail-value">1x/jour</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Voie</div>
-                                    <div class="detail-value">Orale</div>
-                                </div>
-                            </div>
-
-                            <div class="medication-schedule">
-                                <div class="schedule-time taken">
-                                    <div class="checkbox checked">✓</div>
-                                    <span class="time">08:00</span>
-                                    <span>Pris</span>
                                 </div>
                             </div>
                         </div>

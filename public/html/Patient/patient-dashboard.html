@@ -18,18 +18,18 @@
             <!-- Header -->
             <header class="header">
                 <div class="header-left">
-                    <h1>Bonjour, Sophie Martin</h1>
-                    <p>Voici votre suivi du jour</p>
+                    <h1>Bonjour</h1>
+                    <p id="dashboard-subtitle">Voici votre suivi du jour</p>
                 </div>
                 <div class="header-right">
                     <div class="notification-icon">
                         🔔
-                        <span class="notification-badge">3</span>
+                        <span class="notification-badge" id="notif-count">0</span>
                     </div>
                     <div class="user-profile">
-                        <div class="user-avatar">SM</div>
+                        <div class="user-avatar">--</div>
                         <div class="user-info">
-                            <h3>Sophie Martin</h3>
+                            <h3>Chargement...</h3>
                             <p>Patient</p>
                         </div>
                     </div>
@@ -42,7 +42,7 @@
                 <div class="stats-grid">
                     <div class="stat-card green">
                         <div class="stat-info">
-                            <h3>7</h3>
+                            <h3 id="stat-months">—</h3>
                             <p>Mois post-greffe</p>
                         </div>
                         <div class="stat-icon">🫘</div>
@@ -50,7 +50,7 @@
 
                     <div class="stat-card blue">
                         <div class="stat-info">
-                            <h3>2</h3>
+                            <h3 id="stat-rdv">—</h3>
                             <p>Prochains RDV</p>
                         </div>
                         <div class="stat-icon">📅</div>
@@ -58,7 +58,7 @@
 
                     <div class="stat-card orange">
                         <div class="stat-info">
-                            <h3>1</h3>
+                            <h3 id="stat-questionnaires">—</h3>
                             <p>Questionnaire en attente</p>
                         </div>
                         <div class="stat-icon">⚠️</div>
@@ -66,7 +66,7 @@
 
                     <div class="stat-card purple">
                         <div class="stat-info">
-                            <h3>2</h3>
+                            <h3 id="stat-messages">—</h3>
                             <p>Nouveaux messages</p>
                         </div>
                         <div class="stat-icon">💬</div>
@@ -85,19 +85,19 @@
                             <div class="info-grid">
                                 <div class="info-box">
                                     <div class="info-label">Date de Greffe</div>
-                                    <div class="info-value">15 mars 2025</div>
+                                    <div class="info-value" id="info-greffe-date">—</div>
                                 </div>
                                 <div class="info-box">
                                     <div class="info-label">Médecin Référent</div>
-                                    <div class="info-value">Dr. Jean Dubois</div>
+                                    <div class="info-value" id="info-medecin">—</div>
                                 </div>
                                 <div class="info-box">
                                     <div class="info-label">Groupe Sanguin</div>
-                                    <div class="info-value">A+</div>
+                                    <div class="info-value" id="info-groupe">—</div>
                                 </div>
                                 <div class="info-box">
                                     <div class="info-label">Dernier bilan</div>
-                                    <div class="info-value">12 octobre 2025</div>
+                                    <div class="info-value" id="info-bilan">—</div>
                                 </div>
                             </div>
                         </div>
@@ -106,34 +106,17 @@
                         <div class="card" style="margin-bottom: 15px;">
                             <div class="card-header">
                                 <h2>Mon traitement aujourd'hui</h2>
-                                <a href="#" class="btn-link">Voir tout →</a>
+                                <a href="/patient/treatment" class="btn-link">Voir tout →</a>
                             </div>
 
-                            <div class="treatment-item">
-                                <div class="treatment-icon">💊</div>
-                                <div class="treatment-info">
-                                    <h4>Advagraf</h4>
-                                    <p>5 mg • Matin (08:00) • Pris aujourd'hui</p>
+                            <div id="treatmentSummary" class="treatment-list" style="min-height: 80px;">
+                                <div class="treatment-item">
+                                    <div class="treatment-icon">⏳</div>
+                                    <div class="treatment-info">
+                                        <h4>Chargement du traitement...</h4>
+                                        <p>Veuillez patienter</p>
+                                    </div>
                                 </div>
-                                <span class="treatment-status status-taken">✓ Pris</span>
-                            </div>
-
-                            <div class="treatment-item">
-                                <div class="treatment-icon">💊</div>
-                                <div class="treatment-info">
-                                    <h4>Advagraf</h4>
-                                    <p>5 mg • Soir (20:00) • À prendre</p>
-                                </div>
-                                <span class="treatment-status status-pending">En attente</span>
-                            </div>
-
-                            <div class="treatment-item">
-                                <div class="treatment-icon">💊</div>
-                                <div class="treatment-info">
-                                    <h4>Certican</h4>
-                                    <p>0.75 mg • Matin (08:00) • Pris aujourd'hui</p>
-                                </div>
-                                <span class="treatment-status status-taken">✓ Pris</span>
                             </div>
                         </div>
 
@@ -475,6 +458,7 @@
         }
     </script>
     <script src="/js/patient-dashboard.js"></script>
+    <script src="/js/patient-treatment.js"></script>
 </body>
 
 </html>
