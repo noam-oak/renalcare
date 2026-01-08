@@ -64,7 +64,6 @@
                         </div>
                         <div class="stat-icon">⚠️</div>
                     </div>
-
                     <div class="stat-card purple">
                         <div class="stat-info">
                             <h3 id="stat-messages">—</h3>
@@ -121,159 +120,88 @@
                             </div>
                         </div>
 
-                        <!-- Messages récents -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h2>Messages récents</h2>
-                            </div>
+                        <!-- Right Column: RDV & Alerts -->
+                        <div>
+                            <!-- Prochain RDV -->
+                            <div class="card" style="margin-bottom: 15px;">
+                                <div class="card-header">
+                                    <h2>Prochains rendez-vous</h2>
+                                    <a href="/patient/rendez-vous" class="btn-link">Planning →</a>
+                                </div>
 
-                            <div class="message-item">
-                                <div class="message-avatar">DR</div>
-                                <div class="message-content">
-                                    <div class="message-header">
-                                        <span class="message-sender">Dr. Jean Dubois</span>
-                                        <span class="message-time">Il y a 2h</span>
-                                    </div>
-                                    <div class="message-text">
-                                        Bonjour Sophie, j'ai bien reçu vos derniers résultats. Votre taux de créatinine
-                                        est préoccupant. Pouvez-vous prendre rendez-vous cette semaine ?
+                                <div id="appointmentsContainer" class="appointments-list">
+                                    <div class="appointment-item">
+                                        <div class="appointment-time">
+                                            <div class="time">—</div>
+                                            <div class="duration">—</div>
+                                        </div>
+                                        <div class="appointment-details">
+                                            <h4>Chargement...</h4>
+                                            <p>Récupération des rendez-vous</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="message-item">
-                                <div class="message-avatar">IF</div>
-                                <div class="message-content">
-                                    <div class="message-header">
-                                        <span class="message-sender">Inf. Claire Robert</span>
-                                        <span class="message-time">Hier 16h30</span>
+                            <!-- Alertes -->
+                            <div class="card" style="margin-bottom: 15px;">
+                                <div class="card-header">
+                                    <h2>Alertes & Notifications</h2>
+                                </div>
+
+                                <div id="alertsContainer" class="alerts-list">
+                                    <div class="alert alert-info">
+                                        <span class="alert-icon">ℹ️</span>
+                                        <div class="alert-content">
+                                            <h4>Chargement...</h4>
+                                            <p>Récupération des alertes</p>
+                                        </div>
                                     </div>
-                                    <div class="message-text">
-                                        N'oubliez pas de remplir votre questionnaire bimensuel. C'est important pour
-                                        votre suivi.
+                                </div>
+                            </div>
+
+                            <!-- Rappels du jour -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>Rappels du jour</h2>
+                                </div>
+
+                                <div id="remindersContainer" class="reminders-list">
+                                    <div class="appointment-item">
+                                        <div class="appointment-time">
+                                            <div class="time">—</div>
+                                        </div>
+                                        <div class="appointment-details">
+                                            <h4>Chargement...</h4>
+                                            <p>Récupération des rappels</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Right Column: RDV & Alerts -->
-                    <div>
-                        <!-- Prochain RDV -->
-                        <div class="card" style="margin-bottom: 15px;">
-                            <div class="card-header">
-                                <h2>Prochains rendez-vous</h2>
-                                <a href="#" class="btn-link">Planning →</a>
-                            </div>
-
-                            <div class="appointment-item">
-                                <div class="appointment-time">
-                                    <div class="time">22 Oct</div>
-                                    <div class="duration">14:30</div>
-                                </div>
-                                <div class="appointment-details">
-                                    <h4>Dr. Jean Dubois</h4>
-                                    <p>Consultation de suivi post-greffe</p>
-                                </div>
-                            </div>
-
-                            <div class="appointment-item">
-                                <div class="appointment-time">
-                                    <div class="time">5 Nov</div>
-                                    <div class="duration">09:00</div>
-                                </div>
-                                <div class="appointment-details">
-                                    <h4>Laboratoire</h4>
-                                    <p>Bilan sanguin de contrôle</p>
-                                </div>
-                            </div>
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Actions rapides</h2>
                         </div>
-
-                        <!-- Alertes -->
-                        <div class="card" style="margin-bottom: 15px;">
-                            <div class="card-header">
-                                <h2>Alertes & Notifications</h2>
-                            </div>
-
-                            <div class="alert alert-danger">
-                                <span class="alert-icon">🔴</span>
-                                <div class="alert-content">
-                                    <h4>Créatinine élevée</h4>
-                                    <p>Taux: 245 mg/L. Contactez votre médecin.</p>
-                                </div>
-                            </div>
-
-                            <div class="alert alert-warning">
-                                <span class="alert-icon">⚠️</span>
-                                <div class="alert-content">
-                                    <h4>Questionnaire en attente</h4>
-                                    <p>Votre questionnaire bimensuel doit être rempli.</p>
-                                </div>
-                            </div>
-
-                            <div class="alert alert-info">
-                                <span class="alert-icon">💬</span>
-                                <div class="alert-content">
-                                    <h4>Nouveaux messages</h4>
-                                    <p>2 messages non lus de votre équipe médicale.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Rappels du jour -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h2>Rappels du jour</h2>
-                            </div>
-
-                            <div class="appointment-item">
-                                <div class="appointment-time">
-                                    <div class="time">20:00</div>
-                                </div>
-                                <div class="appointment-details">
-                                    <h4>Advagraf 5mg</h4>
-                                    <p>Traitement immunosuppresseur</p>
-                                </div>
-                            </div>
-
-                            <div class="appointment-item">
-                                <div class="appointment-time">
-                                    <div class="time">22:00</div>
-                                </div>
-                                <div class="appointment-details">
-                                    <h4>Mesure tension</h4>
-                                    <p>Contrôle tension artérielle</p>
-                                </div>
-                            </div>
+                        <div class="quick-actions">
+                            <a href="/patient/questionnaire" class="action-btn">
+                                <div class="icon">📋</div>
+                                <p>Remplir questionnaire</p>
+                            </a>
+                            <a href="/patient/resultat" class="action-btn">
+                                <div class="icon">📊</div>
+                                <p>Voir mes résultats</p>
+                            </a>
+                            <a href="/patient/rendez-vous" class="action-btn">
+                                <div class="icon">📅</div>
+                                <p>Planifier RDV</p>
+                            </a>
                         </div>
                     </div>
                 </div>
-
-                <!-- Quick Actions -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Actions rapides</h2>
-                    </div>
-                    <div class="quick-actions">
-                        <div class="action-btn">
-                            <div class="icon">📋</div>
-                            <p>Remplir questionnaire</p>
-                        </div>
-                        <div class="action-btn">
-                            <div class="icon">💬</div>
-                            <p>Contacter mon médecin</p>
-                        </div>
-                        <div class="action-btn">
-                            <div class="icon">📊</div>
-                            <p>Voir mes résultats</p>
-                        </div>
-                        <div class="action-btn">
-                            <div class="icon">📅</div>
-                            <p>Planifier RDV</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </main>
     </div>
 

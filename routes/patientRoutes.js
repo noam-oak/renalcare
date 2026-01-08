@@ -857,4 +857,151 @@ router.delete('/appointments/:id', async (req, res) => {
   }
 });
 
+// Calculate questionnaire reminders based on transplant protocol
+router.get('/:id/questionnaire-alerts', authenticatePatient, async (req, res) => {
+  try {
+    const patientId = req.patientId;
+
+    // Get patient's dossier medical
+    const dossiers = await sql`
+      SELECT id FROM dossier_medical WHERE id_utilisateur = ${patientId}
+    `;
+
+    if (!dossiers.length) {
+      return res.json({ success: true, alerts: [] });
+    }
+
+    const dossierId = dossiers[0].id;
+
+    // Get transplant date and last response date
+    const suiviRows = await sql`
+      SELECT date_greffe FROM suivi_patient
+      WHERE id_dossier_medical = ${dossierId}
+      ORDER BY date DESC, id DESC
+      LIMIT 1
+    `;
+
+    const reponseRows = await sql`
+      SELECT date FROM reponse
+      WHERE id_dossier_medical = ${dossierId}
+      ORDER BY date DESC, id DESC
+      LIMIT 1
+    `;
+
+    const dateGreffe = suiviRows.length ? new Date(suiviRows[0].date_greffe) : null;
+    const lastResponseDate = reponseRows.length ? new Date(reponseRows[0].date) : null;
+
+    if (!dateGreffe) {
+      return res.json({ success: true, alerts: [] });
+    }
+
+    // Calculate next questionnaire due date based on transplant protocol
+    const today = new Date();
+    const alerts = [];
+
+    // Function to calculate next due date
+    function calculateNextDueDate(greffe, lastResponse) {
+      const daysSinceGreffe = Math.floor((today - greffe) / (1000 * 60 * 60 * 24));
+      const lastResponseDaysSinceGreffe = lastResponse
+        ? Math.floor((lastResponse - greffe) / (1000 * 60 * 60 * 24))
+        : -1;
+
+      let nextDueDate = null;
+      let frequency = null;
+
+      // Week 1 (0-7 days): daily
+      if (daysSinceGreffe <= 7) {
+        // If never responded, due today
+        if (lastResponseDaysSinceGreffe === -1) {
+          nextDueDate = new Date(greffe);
+          nextDueDate.setHours(0, 0, 0, 0);
+          frequency = 'daily';
+        } else if (lastResponseDaysSinceGreffe < 7) {
+          nextDueDate = new Date(lastResponse);
+          nextDueDate.setDate(nextDueDate.getDate() + 1);
+          frequency = 'daily';
+        }
+      }
+      // Weeks 2-12 (8 days - 3 months): every 15 days
+      else if (daysSinceGreffe <= 90) {
+        if (lastResponseDaysSinceGreffe === -1 || lastResponseDaysSinceGreffe <= 7) {
+          nextDueDate = new Date(greffe);
+          nextDueDate.setDate(nextDueDate.getDate() + 15);
+          frequency = '15 jours';
+        } else if (lastResponseDaysSinceGreffe < 90) {
+          nextDueDate = new Date(lastResponse);
+          nextDueDate.setDate(nextDueDate.getDate() + 15);
+          frequency = '15 jours';
+        }
+      }
+      // Months 4-9 (3-9 months): monthly
+      else if (daysSinceGreffe <= 270) {
+        if (lastResponseDaysSinceGreffe === -1 || lastResponseDaysSinceGreffe <= 90) {
+          nextDueDate = new Date(greffe);
+          nextDueDate.setMonth(nextDueDate.getMonth() + 3);
+          frequency = 'mensuel';
+        } else if (lastResponseDaysSinceGreffe < 270) {
+          nextDueDate = new Date(lastResponse);
+          nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+          frequency = 'mensuel';
+        }
+      }
+      // After 9 months (270+ days): quarterly (every 3 months)
+      else {
+        if (lastResponseDaysSinceGreffe === -1 || lastResponseDaysSinceGreffe <= 270) {
+          nextDueDate = new Date(greffe);
+          nextDueDate.setMonth(nextDueDate.getMonth() + 9);
+          frequency = 'trimestriel';
+        } else if (lastResponseDaysSinceGreffe < daysSinceGreffe) {
+          nextDueDate = new Date(lastResponse);
+          nextDueDate.setMonth(nextDueDate.getMonth() + 3);
+          frequency = 'trimestriel';
+        }
+      }
+
+      return { nextDueDate, frequency };
+    }
+
+    const { nextDueDate, frequency } = calculateNextDueDate(dateGreffe, lastResponseDate);
+
+    if (nextDueDate) {
+      const daysUntilDue = Math.floor((nextDueDate - today) / (1000 * 60 * 60 * 24));
+
+      // Create alert if questionnaire is due soon or overdue
+      if (daysUntilDue <= 0) {
+        // Overdue
+        alerts.push({
+          id: 'questionnaire_overdue',
+          title: 'Questionnaire en retard',
+          message: `Votre questionnaire était due le ${nextDueDate.toLocaleDateString('fr-FR')}. Veuillez le remplir immédiatement.`,
+          severity: 'danger',
+          type: 'questionnaire',
+          daysUntilDue: daysUntilDue
+        });
+      } else if (daysUntilDue <= 3) {
+        // Due within 3 days
+        alerts.push({
+          id: 'questionnaire_due_soon',
+          title: 'Questionnaire à remplir bientôt',
+          message: `Votre questionnaire est du ${nextDueDate.toLocaleDateString('fr-FR')} (dans ${daysUntilDue} jour${daysUntilDue > 1 ? 's' : ''}).`,
+          severity: 'warning',
+          type: 'questionnaire',
+          daysUntilDue: daysUntilDue
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      alerts: alerts,
+      nextDueDate: nextDueDate ? nextDueDate.toISOString().split('T')[0] : null,
+      lastResponseDate: lastResponseDate ? lastResponseDate.toISOString().split('T')[0] : null,
+      frequency: frequency
+    });
+  } catch (err) {
+    console.error('Erreur calcul alertes questionnaire:', err);
+    res.status(500).json({ success: false, error: 'Erreur lors du calcul des rappels' });
+  }
+});
+
 module.exports = router;
