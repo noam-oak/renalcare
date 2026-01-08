@@ -546,11 +546,22 @@ function getPatientIdentifiers() {
 
 async function preloadDossierId() {
   const patientId = localStorage.getItem("user_id")
+  const token = localStorage.getItem("auth_token") || patientId
   if (!patientId) return
 
   try {
-    const response = await fetch(`/api/patients/${patientId}/dossier-id`)
-    const result = await response.json()
+    const response = await fetch(`/api/patients/${patientId}/dossier-id`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    const text = await response.text()
+    let result = {}
+    try {
+      result = text ? JSON.parse(text) : {}
+    } catch (e) {
+      console.warn('Réponse non JSON lors du préchargement dossier:', text)
+      result = {}
+    }
 
     if (!response.ok || !result.success || !result.dossier_id) {
       console.warn("Impossible de précharger l'id du dossier médical:", result.error || response.statusText)
