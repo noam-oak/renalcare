@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (overviewTabBtn) {
         overviewTabBtn.addEventListener('click', loadStats);
     }
+
+    // Précharger les logs si on est déjà sur l'onglet logs (rare)
+    const logsPage = document.getElementById('page-logs');
+    if (logsPage && logsPage.classList.contains('active')) {
+        loadLogs();
+    }
 });
 
 async function loadStats() {
@@ -98,6 +104,60 @@ function updateActivityList(activities) {
             </div>
         </div>
     `).join('');
+}
+
+// Chargement des logs applicatifs
+async function loadLogs() {
+    const list = document.getElementById('logs-list');
+    if (!list) return;
+
+    list.innerHTML = `<div class="log-item"><span class="log-time">Chargement...</span><span class="log-level info">INFO</span><span>Lecture des logs</span></div>`;
+
+    try {
+        const res = await fetch('/api/admin/logs');
+        const data = await res.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Erreur de lecture des logs');
+        }
+
+        const logs = data.logs || [];
+        if (!logs.length) {
+            list.innerHTML = `<div class="log-item"><span class="log-time">—</span><span class="log-level info">INFO</span><span>Aucun log disponible</span></div>`;
+            return;
+        }
+
+        list.innerHTML = logs.map((entry) => formatLogItem(entry.line)).join('');
+    } catch (err) {
+        console.error('Logs admin:', err);
+        list.innerHTML = `<div class="log-item"><span class="log-time">Erreur</span><span class="log-level error">ERROR</span><span>${err.message}</span></div>`;
+    }
+}
+
+function formatLogItem(line) {
+    // Tentative de parsing rudimentaire [timestamp] LEVEL message
+    const match = line.match(/^(\[[^\]]+\])?\s*(INFO|ERROR|WARN|WARNING|DEBUG)?\s*-?\s*(.*)$/i);
+    const time = match && match[1] ? match[1] : '';
+    const levelRaw = match && match[2] ? match[2].toUpperCase() : '';
+    const message = match ? match[3] : line;
+
+    const levelClass = levelRaw === 'ERROR' ? 'error'
+        : (levelRaw === 'WARN' || levelRaw === 'WARNING') ? 'warning'
+        : 'info';
+
+    const levelLabel = levelRaw || 'INFO';
+    const timeLabel = time || '[log]';
+
+    return `<div class="log-item"><span class="log-time">${timeLabel}</span><span class="log-level ${levelClass}">${levelLabel}</span><span>${escapeHtml(message)}</span></div>`;
+}
+
+function escapeHtml(str) {
+    return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function animateValue(id, end) {

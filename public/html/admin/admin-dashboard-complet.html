@@ -116,9 +116,6 @@
                                     onclick="navigateTo('users')">
                                     👥 Gérer les utilisateurs
                                 </button>
-                                <button class="btn-primary" style="width: 100%;" onclick="navigateTo('stats')">
-                                    📈 Voir les statistiques
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -355,43 +352,19 @@
                     <div class="card">
                         <div class="card-header">
                             <h2>Logs Système</h2>
+                            <button class="btn-primary" onclick="loadLogs()">🔄 Rafraîchir</button>
                         </div>
 
                         <div class="tabs">
                             <button class="tab active">Tous</button>
-                            <button class="tab">Info</button>
-                            <button class="tab">Warning</button>
-                            <button class="tab">Erreurs</button>
                         </div>
 
-                        <div class="log-item">
-                            <span class="log-time">[2025-10-15 14:23:45]</span>
-                            <span class="log-level info">INFO</span>
-                            <span>Connexion réussie - Admin Principal (IP: 192.168.1.100)</span>
-                        </div>
-
-                        <div class="log-item">
-                            <span class="log-time">[2025-10-15 14:20:12]</span>
-                            <span class="log-level info">INFO</span>
-                            <span>Validation compte patient - Marie Lefebvre</span>
-                        </div>
-
-                        <div class="log-item">
-                            <span class="log-time">[2025-10-15 14:15:33]</span>
-                            <span class="log-level warning">WARNING</span>
-                            <span>Tentative connexion échouée - patient@example.com</span>
-                        </div>
-
-                        <div class="log-item">
-                            <span class="log-time">[2025-10-15 13:45:22]</span>
-                            <span class="log-level error">ERROR</span>
-                            <span>Erreur base de données - Timeout connexion MySQL</span>
-                        </div>
-
-                        <div class="log-item">
-                            <span class="log-time">[2025-10-15 13:30:15]</span>
-                            <span class="log-level info">INFO</span>
-                            <span>Sauvegarde automatique effectuée - 1.2 GB</span>
+                        <div id="logs-list">
+                            <div class="log-item">
+                                <span class="log-time">Chargement...</span>
+                                <span class="log-level info">INFO</span>
+                                <span>Lecture des logs</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -642,7 +615,6 @@
             'overview': ['Tableau de bord Administrateur', 'Gestion de la plateforme de suivi post-greffe'],
             'users': ['Gestion des Utilisateurs', 'Gérer tous les comptes patients et médecins'],
             'pending': ['Comptes en Attente', 'Valider les nouvelles demandes d\'inscription'],
-            'stats': ['Statistiques', 'Analyses et métriques de la plateforme'],
             'questionnaires': ['Gestion des Questionnaires', 'Créer et gérer les formulaires de suivi'],
             'support': ['Support / SAV', 'Gérer les tickets et demandes d\'assistance'],
             'logs': ['Logs Système', 'Historique des événements système'],
@@ -658,6 +630,9 @@
 
         if (page === 'pending') {
             loadPendingRequests();
+        }
+        if (page === 'logs' && typeof loadLogs === 'function') {
+            loadLogs();
         }
     }
 

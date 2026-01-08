@@ -3,6 +3,8 @@ const express = require('express');
 const router = express.Router();
 const sql = require('../db');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
 
 const pendingRequestsStore = require('../services/pendingRequestsStore');
 const {
@@ -129,6 +131,26 @@ router.post('/refuse-account', async (req, res) => {
     return res
       .status(500)
       .json({ success: false, error: 'Erreur lors du refus.' });
+  }
+});
+
+// Lecture des logs applicatifs (console/app.log)
+router.get('/logs', async (_req, res) => {
+  try {
+    const logPath = process.env.APP_LOG_PATH || path.join(__dirname, '..', 'app.log');
+    if (!fs.existsSync(logPath)) {
+      return res.json({ success: true, logs: [] });
+    }
+
+    const raw = await fs.promises.readFile(logPath, 'utf8');
+    // Renvoyer les 200 dernières lignes pour ne pas surcharger
+    const lines = raw.split(/\r?\n/).filter(Boolean);
+    const tail = lines.slice(-200).map((line, idx) => ({ id: idx, line }));
+
+    res.json({ success: true, logs: tail });
+  } catch (err) {
+    console.error('Erreur lecture logs:', err);
+    res.status(500).json({ success: false, error: 'Impossible de lire les logs.' });
   }
 });
 
