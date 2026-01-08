@@ -50,38 +50,52 @@ router.post('/validate-account', async (req, res) => {
   }
 
   try {
-    // Stopper proprement si l'email existe déjà en base
-    const existing = await sql`SELECT id, role FROM utilisateur WHERE email = ${request.email}`;
-    if (existing.length > 0) {
-      return res.status(409).json({
-        success: false,
-        error: `Un compte existe déjà pour ${request.email}. Supprimez/traitez la demande en double ou réinitialisez le mot de passe de ce compte.`,
-      });
-    }
-
     // 1. Générer les identifiants
     const password = Math.random().toString(36).slice(-8); // Mot de passe aléatoire de 8 caractères
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     const securite_sociale = BigInt(Array.from({ length: 15 }, () => Math.floor(Math.random() * 10)).join(''));
     
-    // 2. Préparer les données
-    // Capitaliser le rôle (patient -> Patient, medecin -> Medecin)
+    // 2. Préparer les données communes
     const roleRaw = request.type === 'medecin' ? 'medecin' : 'patient';
     const role = roleRaw.charAt(0).toUpperCase() + roleRaw.slice(1);
-    
     const id_utilisateur_medecin = null;
-    
-    // Générer des valeurs par défaut pour les champs obligatoires manquants
     const sexes = [0, 1];
     const sexe = sexes[Math.floor(Math.random() * sexes.length)];
     const adresse_postale = 'Adresse à compléter';
-    
-    // Date de naissance par défaut (adulte)
     const today = new Date();
     const birthDate = new Date(today.getFullYear() - 30, 0, 1);
     const date_naissance = birthDate.toISOString().split('T')[0];
 
-    // 3. Insérer dans la base de données
+    // 3. Si l'email existe déjà, on met à jour le compte au lieu d'insérer
+    const existing = await sql`SELECT * FROM utilisateur WHERE email = ${request.email}`;
+    if (existing.length > 0) {
+      const user = existing[0];
+      const updated = await sql`
+        UPDATE utilisateur
+        SET mdp = ${hashedPassword},
+            role = ${role},
+            prenom = ${request.prenom || user.prenom},
+            nom = ${request.nom || user.nom},
+            telephone = ${request.telephone || user.telephone || '0000000000'},
+            adresse_postale = ${user.adresse_postale || adresse_postale},
+            securite_sociale = ${user.securite_sociale || securite_sociale.toString()},
+            date_naissance = ${user.date_naissance || date_naissance},
+            sexe = ${user.sexe ?? sexe},
+            id_utilisateur_medecin = ${id_utilisateur_medecin}
+        WHERE email = ${request.email}
+        RETURNING id
+      `;
+
+      if (!updated || updated.length === 0) {
+        throw new Error("Échec de la mise à jour du compte existant.");
+      }
+
+      await sendValidationEmail(request);
+      pendingRequestsStore.remove(request.id);
+      return res.json({ success: true, updated: true });
+    }
+
+    // 4. Insérer dans la base de données si le compte n'existe pas
     const newUsers = await sql`
       INSERT INTO utilisateur (email, mdp, securite_sociale, id_utilisateur_medecin, role, prenom, nom, date_naissance, sexe, telephone, adresse_postale)
       VALUES (${request.email}, ${hashedPassword}, ${securite_sociale.toString()}, ${id_utilisateur_medecin}, ${role}, ${request.prenom}, ${request.nom}, ${date_naissance}, ${sexe}, ${request.telephone || '0000000000'}, ${adresse_postale})
@@ -92,13 +106,13 @@ router.post('/validate-account', async (req, res) => {
         throw new Error("Erreur lors de l'insertion en base de données");
     }
 
-    // 4. Envoyer l'email avec le lien d'inscription
+    // 5. Envoyer l'email avec le lien d'inscription
     await sendValidationEmail(request);
     
-    // 5. Supprimer de la liste d'attente
+    // 6. Supprimer de la liste d'attente
     pendingRequestsStore.remove(request.id);
 
-    return res.json({ success: true });
+    return res.json({ success: true, inserted: true });
   } catch (err) {
     console.error('Erreur validate-account:', err);
     return res
