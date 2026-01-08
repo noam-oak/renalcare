@@ -77,9 +77,75 @@ async function loadPatientDashboard() {
     fillStats(data.stats);
     fillInfos(data.info);
     updateHeaderName(data.patient);
+    loadTreatments(userId, token);
     updateNotifications(data.stats);
   } catch (err) {
     console.error('Dashboard patient:', err);
+  }
+}
+
+async function loadTreatments(userId, token) {
+  const container = document.getElementById('treatmentSummary');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="treatment-item">
+      <div class="treatment-icon">⏳</div>
+      <div class="treatment-info">
+        <h4>Chargement des ordonnances...</h4>
+        <p>Merci de patienter</p>
+      </div>
+    </div>`;
+
+  try {
+    const resp = await fetch(`/api/patients/${userId}/traitements`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    const data = await resp.json();
+    if (!resp.ok || !data.success) {
+      throw new Error(data.error || 'Erreur de chargement');
+    }
+
+    const traitements = data.traitements || [];
+    if (traitements.length === 0) {
+      container.innerHTML = `
+        <div class="treatment-item">
+          <div class="treatment-icon">💊</div>
+          <div class="treatment-info">
+            <h4>Aucune ordonnance</h4>
+            <p>Revenez après la prochaine prescription</p>
+          </div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = traitements.map(t => {
+      const dateText = t.date ? new Date(t.date).toLocaleDateString('fr-FR') : 'Ordonnance';
+      const lines = (t.prescription || '').split('\n').filter(Boolean);
+      const first = lines[0] || 'Prescription en cours';
+      const rest = lines.slice(1, 3).join(' • ');
+      const preview = [first, rest].filter(Boolean).join(' • ');
+
+      return `
+        <div class="treatment-item">
+          <div class="treatment-icon">💊</div>
+          <div class="treatment-info">
+            <h4>${dateText}</h4>
+            <p>${preview}</p>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `
+      <div class="treatment-item">
+        <div class="treatment-icon">⚠️</div>
+        <div class="treatment-info">
+          <h4>Erreur</h4>
+          <p>Impossible de charger vos ordonnances</p>
+        </div>
+      </div>`;
   }
 }
 

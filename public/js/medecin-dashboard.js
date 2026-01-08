@@ -636,6 +636,9 @@ function goToOrdonnancePatient(patientId, patientLabel) {
   if (typeof navigateTo === 'function') {
     navigateTo('ordonnances');
   }
+  if (typeof loadOrdonnances === 'function') {
+    loadOrdonnances(patientId);
+  }
   if (typeof openCreateOrdonnanceModal === 'function') {
     openCreateOrdonnanceModal();
   }

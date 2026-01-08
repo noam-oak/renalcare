@@ -1955,33 +1955,113 @@
             document.getElementById('createOrdonnanceModal').classList.remove('active');
         }
 
-        function createOrdonnance(e) {
+        function getSelectedOrdoPatient() {
+            const select = document.getElementById('ordoPatient');
+            if (!select) return { id: null, label: '' };
+            const id = select.value;
+            const label = select.options[select.selectedIndex]?.textContent || '';
+            return { id, label };
+        }
+
+        async function loadOrdonnances(patientId) {
+            const list = document.getElementById('ordonnancesList');
+            if (!list || !patientId) return;
+
+            list.innerHTML = `<p style="padding:16px; color:#666;">Chargement des ordonnances...</p>`;
+
+            try {
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    list.innerHTML = `<p style="padding:16px; color:#c33;">Session expirée</p>`;
+                    return;
+                }
+
+                const resp = await fetch(`/api/medecin/patients/${patientId}/traitements`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    list.innerHTML = `<p style="padding:16px; color:#c33;">Erreur de chargement</p>`;
+                    return;
+                }
+
+                const traitements = data.traitements || [];
+                if (traitements.length === 0) {
+                    list.innerHTML = `<p style="padding:16px; color:#666;">Aucune ordonnance pour ce patient.</p>`;
+                    return;
+                }
+
+                list.innerHTML = traitements.map(t => {
+                    const lines = (t.prescription || '').split('\n').filter(Boolean);
+                    const preview = lines.slice(0, 2).join(' • ');
+                    const dateText = t.date ? new Date(t.date).toLocaleDateString('fr-FR') : '';
+                    return `
+                        <div class="patient-item">
+                            <div class="patient-avatar">💊</div>
+                            <div class="patient-info">
+                                <h4>Ordonnance</h4>
+                                <p>${[dateText, preview].filter(Boolean).join(' • ')}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `<p style="padding:16px; color:#c33;">Erreur réseau</p>`;
+            }
+        }
+
+        async function createOrdonnance(e) {
             e.preventDefault();
 
-            const patient = document.getElementById('ordoPatient').value;
+            const { id: patientId, label: patientLabel } = getSelectedOrdoPatient();
             const medicaments = document.getElementById('ordoMedicaments').value;
             const duree = document.getElementById('ordoDuree').value;
             const notes = document.getElementById('ordoNotes').value;
 
-            const initiales = patient.split(' ').map(n => n[0]).join('');
-            const today = new Date().toLocaleDateString('fr-FR');
+            if (!patientId) {
+                alert('Merci de choisir un patient.');
+                return;
+            }
+            if (!medicaments || medicaments.trim().length < 3) {
+                alert('Merci de renseigner la prescription.');
+                return;
+            }
 
-            // Ajouter dans la liste
-            const ordoList = document.getElementById('ordonnancesList');
-            const newOrdo = document.createElement('div');
-            newOrdo.className = 'patient-item';
-            newOrdo.innerHTML = `
-                <div class="patient-avatar">${initiales}</div>
-                <div class="patient-info">
-                    <h4>Ordonnance - ${patient}</h4>
-                    <p>${today} • ${medicaments.split('\n')[0]} • Durée: ${duree}</p>
-                </div>
-                <button class="btn-primary" style="width: auto; padding: 8px 16px;">📄 Voir</button>
-            `;
-            ordoList.appendChild(newOrdo);
+            try {
+                const token = localStorage.getItem('auth_token');
+                const resp = await fetch(`/api/medecin/patients/${patientId}/traitements`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ prescription: medicaments, duree, notes })
+                });
 
-            alert(`✅ Ordonnance créée avec succès !\n\nPatient: ${patient}\nDurée: ${duree}\nMédicaments:\n${medicaments}`);
-            closeCreateOrdonnanceModal();
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    throw new Error(data.message || 'Erreur lors de la création de l\'ordonnance');
+                }
+
+                await loadOrdonnances(patientId);
+                alert(`✅ Ordonnance créée pour ${patientLabel || 'le patient'}.`);
+                closeCreateOrdonnanceModal();
+            } catch (error) {
+                console.error(error);
+                alert(error.message || 'Erreur réseau');
+            }
+        }
+
+        const ordoSelect = document.getElementById('ordoPatient');
+        if (ordoSelect) {
+            ordoSelect.addEventListener('change', (ev) => {
+                const val = ev.target.value;
+                if (val) {
+                    loadOrdonnances(val);
+                }
+            });
         }
 
         // Tabs RDV

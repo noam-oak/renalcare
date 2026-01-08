@@ -230,6 +230,59 @@ router.get('/patients/:patientId/traitements', authenticateMedecin, async (req, 
     }
 });
 
+// Création d'une ordonnance/traitement pour un patient affecté au médecin connecté
+router.post('/patients/:patientId/traitements', authenticateMedecin, async (req, res) => {
+    try {
+        const patientId = Number(req.params.patientId);
+        const { prescription, notes, duree } = req.body || {};
+
+        if (!patientId || Number.isNaN(patientId)) {
+            return res.status(400).json({ success: false, message: 'ID patient invalide' });
+        }
+
+        if (!prescription || !prescription.trim()) {
+            return res.status(400).json({ success: false, message: 'Prescription requise' });
+        }
+
+        // Vérifier que le patient est bien affecté à ce médecin et récupérer le dossier
+        const dossier = await sql`
+            SELECT d.id
+            FROM dossier_medical d
+            JOIN utilisateur u ON u.id = d.id_utilisateur
+            WHERE u.id = ${patientId} AND u.id_utilisateur_medecin = ${req.userId}
+            LIMIT 1
+        `;
+
+        if (!dossier.length) {
+            return res.status(404).json({ success: false, message: 'Dossier introuvable pour ce médecin' });
+        }
+
+        const noteBlock = notes ? `\nNotes: ${notes}` : '';
+        const dureeBlock = duree ? `\nDurée: ${duree}` : '';
+        const fullPrescription = `${prescription}${dureeBlock}${noteBlock}`.trim();
+
+        const inserted = await sql`
+            INSERT INTO suivi_patient (
+                date,
+                prescription,
+                id_dossier_medical,
+                suivi_traitement
+            ) VALUES (
+                NOW(),
+                ${fullPrescription},
+                ${dossier[0].id},
+                false
+            )
+            RETURNING id, date, prescription
+        `;
+
+        return res.status(201).json({ success: true, traitement: inserted[0] });
+    } catch (error) {
+        console.error('Erreur lors de la création de l\'ordonnance:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+});
+
 // GET all appointments for doctor's patients
 router.get('/appointments', authenticateMedecin, async (req, res) => {
     try {
