@@ -239,14 +239,100 @@ function buildValueRows(row) {
 }
 
 function interpretRow(row) {
+  const sex = getPatientSex();
+  const refs = getRefRangesBySex(sex);
+  const num = (v) => (v === null || v === undefined ? null : Number(v));
+  const creat = num(row.creatinine);
+  const ts = num(row.tension_systolique);
+  const td = num(row.tension_diastolique);
+  const temp = num(row.temperature);
+  const gly = num(row.glycemie);
+  const hgb = num(row.hemoglobine);
+  const tac = num(row.tacrolimus_ng);
+  const eve = num(row.everolimus_ng);
+  const fc = num(row.frequence_cardiaque);
+  const fu = num(row.frequence_urinaire);
+  const chol = num(row.cholesterol);
+  const dg = num(row.douleur_greffon);
+
+  const hasAny = [creat, ts, td, temp, gly, hgb, tac, eve, fc, fu, chol, dg].some((v) => v !== null && !Number.isNaN(v));
+  if (!hasAny) return 'Données insuffisantes pour interpréter ce bilan.';
+
   const flags = [];
-  if (row.creatinine > 120) flags.push('Créatinine élevée');
-  if (row.tension_systolique > 160 || row.tension_diastolique > 100) flags.push('Hypertension marquée');
-  if (row.temperature >= 38) flags.push('Fièvre');
-  if (row.tacrolimus_ng && (row.tacrolimus_ng < 3 || row.tacrolimus_ng > 7)) flags.push('Tacrolimus hors cible');
-  if (row.everolimus_ng && row.everolimus_ng > 8) flags.push('Évérolimus élevé');
-  if (flags.length === 0) return 'Profil globalement rassurant sur ce bilan.';
+  if (creat !== null) {
+    if (creat > refs.creatinine.max) flags.push('Créatinine élevée (fonction rénale)');
+    else if (creat < refs.creatinine.min) flags.push('Créatinine basse (vérifier labo)');
+  }
+
+  if (ts !== null) {
+    if (ts > refs.ta_sys.max) flags.push('Tension systolique élevée (>140)');
+    else if (ts < refs.ta_sys.min) flags.push('Tension systolique basse (<100)');
+  }
+  if (td !== null) {
+    if (td > refs.ta_dia.max) flags.push('Tension diastolique élevée (>90)');
+    else if (td < refs.ta_dia.min) flags.push('Tension diastolique basse (<60)');
+  }
+
+  if (temp !== null) {
+    if (temp > refs.temperature.max) flags.push('Fièvre (>38°C)');
+    else if (temp < refs.temperature.min) flags.push('Hypothermie (<36.5°C)');
+  }
+
+  if (gly !== null) {
+    if (gly >= 1.26) flags.push('Hyperglycémie (≥1.26 g/L)');
+    else if (gly < 0.60) flags.push('Hypoglycémie (<0.60 g/L)');
+    else if (gly > refs.glycemie.max) flags.push('Glycémie élevée (>1.00 g/L)');
+  }
+
+  if (hgb !== null) {
+    if (hgb < refs.hemoglobine.min) flags.push('Anémie');
+    else if (hgb > refs.hemoglobine.max) flags.push('Hémoglobine élevée (à confirmer)');
+  }
+
+  if (fc !== null && (fc < 50 || fc > 100)) flags.push('Fréquence cardiaque anormale');
+
+  if (fu !== null) {
+    if (fu < refs.frequence_urinaire.min) {
+      flags.push(`Fréquence urinaire basse (${fu} < ${refs.frequence_urinaire.min}/j)`);
+    } else if (fu > refs.frequence_urinaire.max) {
+      flags.push(`Fréquence urinaire élevée (${fu} > ${refs.frequence_urinaire.max}/j)`);
+    }
+  }
+
+  if (tac !== null && (tac < refs.tacrolimus.min || tac > refs.tacrolimus.max)) flags.push('Tacrolimus hors cible');
+  if (eve !== null && eve > refs.everolimus.max) flags.push('Évérolimus élevé');
+
+  if (chol !== null && chol > refs.cholesterol.maxAlert) flags.push('Hypercholestérolémie (>2.40 g/L)');
+
+  if (dg !== null && dg >= 5) flags.push('Douleur greffon élevée (≥5/10)');
+
+  if (flags.length === 0) return 'Pas d’alerte majeure détectée ; contrôle clinique recommandé.';
   return flags.join(' • ');
+}
+
+function getPatientSex() {
+  const stored = localStorage.getItem('user_sexe') || localStorage.getItem('user_gender') || localStorage.getItem('gender');
+  if (!stored) return 'Homme';
+  const val = stored.toLowerCase();
+  if (val.startsWith('f')) return 'Femme';
+  if (val.startsWith('h') || val.startsWith('m')) return 'Homme';
+  return 'Homme';
+}
+
+function getRefRangesBySex(sex) {
+  const base = {
+    creatinine: sex === 'Femme' ? { min: 60, max: 100 } : { min: 80, max: 115 },
+    ta_sys: { min: 100, max: 140 },
+    ta_dia: { min: 60, max: 90 },
+    temperature: { min: 36.5, max: 37.5 },
+    glycemie: { min: 0.70, max: 1.00 },
+    hemoglobine: sex === 'Femme' ? { min: 12, max: 16 } : { min: 13, max: 17 },
+    frequence_urinaire: { min: 4, max: 7 },
+    tacrolimus: { min: 3, max: 7 },
+    everolimus: { min: 3, max: 8 },
+    cholesterol: { max: 2.00, maxAlert: 2.40 },
+  };
+  return base;
 }
 
 function generateHistoricPdf(row) {
