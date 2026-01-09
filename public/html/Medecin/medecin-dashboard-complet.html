@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Médecin - Suivi Greffe Rénale</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="/js/sidebar.js" defer></script>
     <script src="/js/medecin-dashboard.js" defer></script>
     <style>
@@ -659,6 +661,152 @@
             margin-top: 6px;
         }
 
+        .card-subtitle {
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-ghost {
+            background: white;
+            border: 1px solid #e6e9ef;
+            color: #4a5568;
+            padding: 9px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-ghost:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-shell {
+            position: relative;
+            min-height: 320px;
+        }
+
+        .chart-shell canvas {
+            width: 100% !important;
+            height: 320px !important;
+        }
+
+        .chart-empty {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            height: 320px;
+            color: #6b7280;
+            background: #f8f9fb;
+            border: 1px dashed #e5e7eb;
+            border-radius: 12px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .history-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid #e6e9ef;
+            border-radius: 10px;
+            background: #fafbff;
+        }
+
+        .history-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .history-title {
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .history-metrics {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            color: #374151;
+            font-size: 13px;
+        }
+
+        .tag {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .questionnaire-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .selected-patient-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #eef2ff;
+            color: #312e81;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .selected-patient-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6366f1;
+        }
+
+        .selected-alert-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff7ed;
+            color: #9a3412;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1px solid #fed7aa;
+        }
+
+        .selected-alert-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f97316;
+        }
+
         .data-tile.muted {
             background: #f3f4f6;
             color: #7a7a7a;
@@ -903,7 +1051,14 @@
 
                             <div class="card">
                                 <div class="card-header">
-                                    <h2>Alertes & Notifications</h2>
+                                    <div>
+                                        <h2>Alertes & Notifications</h2>
+                                        <p class="card-subtitle">Questionnaires critiques et messages liés</p>
+                                    </div>
+                                    <div id="alertPatientBadge" class="selected-alert-badge" style="display:none;">
+                                        <span class="dot"></span>
+                                        <span id="alertPatientName">Patient</span>
+                                    </div>
                                 </div>
 
                                 <div id="alertsList">
@@ -993,6 +1148,10 @@
                     <div class="card">
                         <div class="card-header">
                             <h2>Suivi des Données Patients</h2>
+                            <div id="selectedPatientBadge" class="selected-patient-badge" style="display:none;">
+                                <span class="dot"></span>
+                                <span id="selectedPatientName">Sélectionnez un patient</span>
+                            </div>
                         </div>
 
                         <div id="suiviNotice"
@@ -1046,24 +1205,17 @@
 
                             <div class="card">
                                 <div class="card-header">
-                                    <h2>Évolution Créatinine (30 derniers jours)</h2>
-                                </div>
-                                <div class="chart-container">
-                                    <div class="chart-placeholder">
-                                        📈 Graphique d'évolution de la créatinine<br>
-                                        <small>Valeurs normales : 60-130 mg/L</small>
+                                    <div>
+                                        <h2>Évolution des constantes</h2>
+                                        <p class="card-subtitle">Créatinine, poids, tension, température, glycémie</p>
+                                    </div>
+                                    <div class="card-actions">
+                                        <button class="btn-ghost" onclick="downloadLatestQuestionnairePdf()">Télécharger le PDF le plus récent</button>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="card">
-                                <div class="card-header">
-                                    <h2>Évolution Tension Artérielle</h2>
-                                </div>
-                                <div class="chart-container">
-                                    <div class="chart-placeholder">
-                                        📊 Graphique de suivi tension systolique/diastolique
-                                    </div>
+                                <div class="chart-shell">
+                                    <canvas id="suiviChart"></canvas>
+                                    <div id="suiviChartEmpty" class="chart-empty">Aucune donnée de questionnaire pour ce patient.</div>
                                 </div>
                             </div>
                         </div>
@@ -1098,11 +1250,21 @@
                         <div id="suivi-questionnaires" class="tab-content">
                             <div class="card">
                                 <div class="card-header">
-                                    <h2>Questionnaires remplis</h2>
+                                    <div>
+                                        <h2>Questionnaires remplis</h2>
+                                        <p class="card-subtitle">Historique détaillé et export PDF</p>
+                                    </div>
+                                    <div class="card-actions">
+                                        <button class="btn-primary" onclick="downloadLatestQuestionnairePdf()">📄 Export PDF récent</button>
+                                    </div>
                                 </div>
-                                <div id="questionnairesData">
-                                    <p style="text-align: center; color: #666; padding: 40px;">Sélectionnez un patient
-                                        pour voir les questionnaires</p>
+                                <div id="questionnairesData" class="questionnaire-stack">
+                                    <div id="questionnaireSummary">
+                                        <p style="text-align: center; color: #666; padding: 20px;">Sélectionnez un patient pour afficher la dernière réponse.</p>
+                                    </div>
+                                    <div class="history-list" id="questionnairesHistory">
+                                        <p style="text-align: center; color: #666; padding: 20px;">Sélectionnez un patient pour voir l'historique des questionnaires.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2102,9 +2264,14 @@
             setText('poids-value', today.poids ?? '—');
 
             // Questionnaires
-            const questionnairesData = document.getElementById('questionnairesData');
-            if (questionnairesData) {
-                questionnairesData.innerHTML = `
+            const summary = document.getElementById('questionnaireSummary');
+            if (summary) {
+                if (!responses || !responses.length) {
+                    summary.innerHTML = renderQuestionnairePlaceholder(patientLabel);
+                    return;
+                }
+
+                summary.innerHTML = `
                     <div class="questionnaire-item">
                         <div class="questionnaire-header">
                             <div>
@@ -2164,6 +2331,197 @@
                     </div>
                 `;
             }
+        }
+
+        function renderSuiviChart(responses = []) {
+            const canvas = document.getElementById('suiviChart');
+            const empty = document.getElementById('suiviChartEmpty');
+            if (!canvas || typeof Chart === 'undefined') return;
+
+            if (!responses.length) {
+                canvas.style.display = 'none';
+                if (empty) empty.style.display = 'flex';
+                return;
+            }
+
+            canvas.style.display = 'block';
+            if (empty) empty.style.display = 'none';
+
+            const sorted = [...responses].sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+            const labels = sorted.map((r) => r.date ? new Date(r.date).toLocaleDateString('fr-FR') : `#${r.id}`);
+
+            const series = [
+                { key: 'creatinine', label: 'Créatinine (mg/L)', color: '#ef4444' },
+                { key: 'poids', label: 'Poids (kg)', color: '#3b82f6' },
+                { key: 'tension_systolique', label: 'Tension systolique (mmHg)', color: '#f59e0b' },
+                { key: 'temperature', label: 'Température (°C)', color: '#10b981' },
+                { key: 'glycemie', label: 'Glycémie (g/L)', color: '#6366f1' },
+            ];
+
+            const datasets = series.map((serie) => ({
+                label: serie.label,
+                data: sorted.map((r) => (r[serie.key] === null || r[serie.key] === undefined ? null : Number(r[serie.key]))),
+                borderColor: serie.color,
+                backgroundColor: serie.color,
+                spanGaps: true,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.25,
+            })).filter((d) => d.data.some((v) => v !== null && !Number.isNaN(v)));
+
+            if (!datasets.length) {
+                canvas.style.display = 'none';
+                if (empty) empty.style.display = 'flex';
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+            if (suiviChartInstance) suiviChartInstance.destroy();
+
+            suiviChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'nearest', intersect: false },
+                    scales: {
+                        x: { ticks: { maxRotation: 45, minRotation: 0 } },
+                        y: { title: { display: true, text: 'Valeurs' } },
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.dataset.label}: ${ctx.formattedValue}`,
+                            },
+                        },
+                    },
+                },
+            });
+        }
+
+        function renderQuestionnaireHistory(responses, patientLabel) {
+            const container = document.getElementById('questionnairesHistory');
+            if (!container) return;
+
+            if (!responses?.length) {
+                container.innerHTML = `<p style="text-align: center; color: #666; padding: 20px;">Aucun questionnaire trouvé pour ${patientLabel || 'ce patient'}.</p>`;
+                return;
+            }
+
+            const sorted = [...responses].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+            const items = sorted.slice(0, 8).map((r, idx) => {
+                const dateText = r.date ? new Date(r.date).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : 'Date inconnue';
+                const tension = (r.tension_systolique && r.tension_diastolique) ? `${r.tension_systolique}/${r.tension_diastolique} mmHg` : '—';
+                const poids = r.poids != null ? `${r.poids} kg` : '—';
+                const creat = r.creatinine != null ? `${r.creatinine} mg/L` : '—';
+                const temp = r.temperature != null ? `${r.temperature}°C` : '—';
+                return `
+                    <div class="history-row">
+                        <div>
+                            <div class="history-meta">
+                                <span class="tag">#${idx + 1}</span>
+                                <span class="history-title">${dateText}</span>
+                            </div>
+                            <div class="history-metrics">
+                                <span>Poids: ${poids}</span>
+                                <span>Tension: ${tension}</span>
+                                <span>Créatinine: ${creat}</span>
+                                <span>Temp.: ${temp}</span>
+                            </div>
+                        </div>
+                        <div class="history-actions">
+                            <button class="btn-ghost" onclick="downloadQuestionnairePdf(${r.id})">Télécharger le PDF</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = items;
+        }
+
+        function formatValueWithUnit(value, unit) {
+            if (value === null || value === undefined || value === '') return '—';
+            return `${value} ${unit || ''}`.trim();
+        }
+
+        function downloadLatestQuestionnairePdf() {
+            if (!currentPatientResponses.length) {
+                alert('Aucune réponse disponible pour ce patient.');
+                return;
+            }
+            downloadQuestionnairePdf(currentPatientResponses[0].id);
+        }
+
+        function downloadQuestionnairePdf(responseId) {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert('PDF non disponible: librairie manquante.');
+                return;
+            }
+            const row = currentPatientResponses.find((r) => String(r.id) === String(responseId)) || currentPatientResponses[0];
+            if (!row) {
+                alert('Questionnaire introuvable.');
+                return;
+            }
+
+            const doc = new window.jspdf.jsPDF();
+            const margin = 15;
+            const patientLabel = currentPatientLabel || 'Patient';
+
+            doc.setFontSize(14);
+            doc.text('RenalCare - Synthèse questionnaire', 105, margin, { align: 'center' });
+
+            doc.setFontSize(18);
+            doc.text(patientLabel, 105, margin + 10, { align: 'center' });
+
+            doc.setFontSize(12);
+            const dateLabel = row.date ? new Date(row.date).toLocaleString('fr-FR') : 'Date non précisée';
+            doc.text(`Questionnaire du ${dateLabel}`, margin, margin + 22);
+
+            const rows = [
+                ['Poids', formatValueWithUnit(row.poids, 'kg')],
+                ['Créatinine', formatValueWithUnit(row.creatinine, 'mg/L')],
+                ['Tension', (row.tension_systolique && row.tension_diastolique) ? `${row.tension_systolique}/${row.tension_diastolique} mmHg` : '—'],
+                ['Température', formatValueWithUnit(row.temperature, '°C')],
+                ['Glycémie', formatValueWithUnit(row.glycemie, 'g/L')],
+                ['Hémoglobine', formatValueWithUnit(row.hemoglobine, 'g/dL')],
+                ['Fréquence cardiaque', formatValueWithUnit(row.frequence_cardiaque, 'bpm')],
+                ['Fréquence urinaire', formatValueWithUnit(row.frequence_urinaire, 'fois/jour')],
+                ['Tacrolimus', formatValueWithUnit(row.tacrolimus_ng, 'ng/mL')],
+                ['Évérolimus', formatValueWithUnit(row.everolimus_ng, 'ng/mL')],
+            ];
+
+            const tableY = margin + 32;
+            const rowHeight = 8;
+            const tableWidth = 180;
+            const headerHeight = 10;
+            const totalHeight = headerHeight + rows.length * rowHeight;
+
+            doc.setDrawColor(200);
+            doc.rect(margin, tableY, tableWidth, totalHeight);
+            doc.line(margin, tableY + headerHeight, margin + tableWidth, tableY + headerHeight);
+            doc.line(margin + 100, tableY, margin + 100, tableY + totalHeight);
+
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('Paramètre', margin + 4, tableY + 7);
+            doc.text('Valeur', margin + 104, tableY + 7);
+            doc.setFont(undefined, 'normal');
+
+            rows.forEach((rowVal, idx) => {
+                const y = tableY + headerHeight + (idx + 1) * rowHeight - 2;
+                doc.text(rowVal[0], margin + 4, y);
+                doc.text(rowVal[1], margin + 104, y);
+                doc.line(margin, tableY + headerHeight + (idx + 1) * rowHeight, margin + tableWidth, tableY + headerHeight + (idx + 1) * rowHeight);
+            });
+
+            doc.setFontSize(10);
+            doc.text('Document généré automatiquement pour interprétation médicale.', margin, 285);
+
+            const safeName = patientLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'patient';
+            const safeDate = dateLabel.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-:]/g, '');
+            doc.save(`questionnaire-${safeName}-${safeDate}.pdf`);
         }
 
         function renderTraitementsPlaceholder(patientLabel) {
@@ -2240,7 +2598,14 @@
             `;
         }
 
+        let currentPatientResponses = [];
+        let currentPatientLabel = '';
+        let suiviChartInstance = null;
+
         function resetSuiviUI() {
+            currentPatientResponses = [];
+            currentPatientLabel = '';
+
             const resetCards = () => {
                 const map = {
                     'creatinine-value': '—',
@@ -2254,10 +2619,34 @@
                 });
             };
 
+            if (suiviChartInstance) {
+                suiviChartInstance.destroy();
+                suiviChartInstance = null;
+            }
+            const chartEmpty = document.getElementById('suiviChartEmpty');
+            const chartCanvas = document.getElementById('suiviChart');
+            if (chartEmpty) chartEmpty.style.display = 'flex';
+            if (chartCanvas) chartCanvas.style.display = 'none';
+
             const questionnairesData = document.getElementById('questionnairesData');
             if (questionnairesData) {
                 questionnairesData.innerHTML = renderQuestionnairePlaceholder('');
             }
+
+            const summary = document.getElementById('questionnaireSummary');
+            if (summary) {
+                summary.innerHTML = renderQuestionnairePlaceholder('');
+            }
+
+            const history = document.getElementById('questionnairesHistory');
+            if (history) {
+                history.innerHTML = `<p style="text-align: center; color: #666; padding: 20px;">Sélectionnez un patient pour voir l'historique des questionnaires.</p>`;
+            }
+
+            const badge = document.getElementById('selectedPatientBadge');
+            const badgeName = document.getElementById('selectedPatientName');
+            if (badge) badge.style.display = 'none';
+            if (badgeName) badgeName.textContent = 'Sélectionnez un patient';
 
             const symptomesData = document.getElementById('symptomesData');
             if (symptomesData) {
@@ -2277,16 +2666,30 @@
             const selectEl = document.getElementById('patientSelectHidden');
             const patientId = selectEl.value;
             const patientLabel = selectEl.options[selectEl.selectedIndex]?.textContent || '';
+            currentPatientLabel = patientLabel;
             const notice = document.getElementById('suiviNotice');
+            const badge = document.getElementById('selectedPatientBadge');
+            const badgeName = document.getElementById('selectedPatientName');
 
             if (!patientId) {
                 resetSuiviUI();
                 return;
             }
 
+            if (badge) badge.style.display = 'inline-flex';
+            if (badgeName) badgeName.textContent = patientLabel || 'Patient';
+
+            const alertBadge = document.getElementById('alertPatientBadge');
+            const alertBadgeName = document.getElementById('alertPatientName');
+            if (alertBadge) alertBadge.style.display = 'inline-flex';
+            if (alertBadgeName) alertBadgeName.textContent = patientLabel || 'Patient';
+
             const responses = await fetchPatientResponses(patientId);
+            currentPatientResponses = responses || [];
             const traitements = await fetchPatientTreatments(patientId);
             renderPatientVitals(responses, patientLabel);
+            renderSuiviChart(responses);
+            renderQuestionnaireHistory(responses, patientLabel);
 
             // Charger symptômes
             document.getElementById('symptomesData').innerHTML = `
@@ -2326,9 +2729,13 @@
 
             // Charger traitements
             document.getElementById('traitementsData').innerHTML = renderTraitements(traitements, patientLabel);
-            const questionnairesData = document.getElementById('questionnairesData');
-            if (!responses?.length && questionnairesData) {
-                questionnairesData.innerHTML = renderQuestionnairePlaceholder(patientLabel);
+            if (!responses?.length) {
+                const summary = document.getElementById('questionnaireSummary');
+                if (summary) summary.innerHTML = renderQuestionnairePlaceholder(patientLabel);
+                const history = document.getElementById('questionnairesHistory');
+                if (history) {
+                    history.innerHTML = `<p style="text-align: center; color: #666; padding: 20px;">Aucun questionnaire trouvé pour ${patientLabel || 'ce patient'}.</p>`;
+                }
             }
         }
 

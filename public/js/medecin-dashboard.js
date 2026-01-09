@@ -658,6 +658,16 @@ function goToSuiviPatient(patientId, patientLabel) {
     navigateTo('suivi');
   }
   loadPatientDataById(patientId, patientLabel);
+
+  const badge = document.getElementById('selectedPatientBadge');
+  const badgeName = document.getElementById('selectedPatientName');
+  if (badge) badge.style.display = 'inline-flex';
+  if (badgeName) badgeName.textContent = patientLabel || 'Patient';
+
+  const alertBadge = document.getElementById('alertPatientBadge');
+  const alertBadgeName = document.getElementById('alertPatientName');
+  if (alertBadge) alertBadge.style.display = 'inline-flex';
+  if (alertBadgeName) alertBadgeName.textContent = patientLabel || 'Patient';
 }
 
 function goToRdvPatient(patientId, patientLabel) {

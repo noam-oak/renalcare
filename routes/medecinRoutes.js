@@ -158,13 +158,15 @@ router.get('/patients', authenticateMedecin, async (req, res) => {
     }
 });
 
-// Dernières réponses (constantes) pour un patient affecté au médecin connecté
+// Réponses (constantes) pour un patient affecté au médecin connecté
 router.get('/patients/:patientId/reponses', authenticateMedecin, async (req, res) => {
     try {
         const patientId = Number(req.params.patientId);
         if (!patientId || Number.isNaN(patientId)) {
             return res.status(400).json({ success: false, message: 'ID patient invalide' });
         }
+
+        const limit = Math.min(parseInt(req.query.limit, 10) || 30, 100);
 
         // Vérifier que le patient est bien affecté à ce médecin et récupérer le dossier
         const dossier = await sql`
@@ -179,13 +181,26 @@ router.get('/patients/:patientId/reponses', authenticateMedecin, async (req, res
             return res.status(404).json({ success: false, message: 'Dossier introuvable pour ce médecin' });
         }
 
-        // Récupérer les deux dernières réponses (J et J-1)
+        // Récupérer l'historique des réponses récentes
         const responses = await sql`
-            SELECT id, date, poids, creatinine, tension_systolique, tension_diastolique, temperature
+            SELECT 
+                id,
+                date,
+                poids,
+                creatinine,
+                tension_systolique,
+                tension_diastolique,
+                temperature,
+                glycemie,
+                hemoglobine,
+                frequence_cardiaque,
+                frequence_urinaire,
+                tacrolimus_ng,
+                everolimus_ng
             FROM reponse
             WHERE id_dossier_medical = ${dossier[0].id}
             ORDER BY date DESC, id DESC
-            LIMIT 2
+            LIMIT ${limit}
         `;
 
         return res.json({ success: true, responses });
