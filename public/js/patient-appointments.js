@@ -273,7 +273,7 @@ function renderPastAppointments(appointments) {
           </div>
         </div>
         <div class="appointment-actions">
-          <button class="btn-action" onclick="viewAppointmentDetails(${apt.id})">Voir le compte-rendu</button>
+                    <button class="btn-action btn-disabled" disabled aria-disabled="true">Voir le compte-rendu</button>
         </div>
       </div>
     `;

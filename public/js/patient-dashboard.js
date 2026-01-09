@@ -78,9 +78,83 @@ async function loadPatientDashboard() {
     fillInfos(data.info);
     updateHeaderName(data.patient);
     loadTreatments(userId, token);
-    updateNotifications(data.stats);
+    loadUpcomingAppointments(token);
   } catch (err) {
     console.error('Dashboard patient:', err);
+  }
+}
+
+async function loadUpcomingAppointments(token) {
+  const container = document.getElementById('upcomingAppointments');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="appointment-item">
+      <div class="appointment-time">
+        <div class="time">⏳</div>
+        <div class="duration">--:--</div>
+      </div>
+      <div class="appointment-details">
+        <h4>Chargement des rendez-vous...</h4>
+        <p>Merci de patienter</p>
+      </div>
+    </div>`;
+
+  try {
+    const resp = await fetch('/api/patients/appointments/upcoming', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.success) {
+      throw new Error(data.error || 'Erreur de chargement des rendez-vous');
+    }
+
+    const rdvs = data.appointments || [];
+    if (!rdvs.length) {
+      container.innerHTML = `
+        <div class="appointment-item">
+          <div class="appointment-time">
+            <div class="time">—</div>
+          </div>
+          <div class="appointment-details">
+            <h4>Aucun rendez-vous prévu</h4>
+            <p>Planifiez un contrôle auprès de votre médecin</p>
+          </div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = rdvs.slice(0, 3).map((rdv) => {
+      const date = rdv.date ? new Date(rdv.date) : null;
+      const day = date ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : 'Date';
+      const time = date ? date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+      const doctor = rdv.prenom || rdv.nom ? `Dr. ${rdv.nom || ''}`.trim() : 'Équipe médicale';
+      const status = rdv.statut ? rdv.statut : '';
+
+      return `
+        <div class="appointment-item">
+          <div class="appointment-time">
+            <div class="time">${day}</div>
+            <div class="duration">${time}</div>
+          </div>
+          <div class="appointment-details">
+            <h4>${doctor}</h4>
+            <p>${status ? status : 'Rendez-vous programmé'}</p>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    console.error('RDV patient:', err);
+    container.innerHTML = `
+      <div class="appointment-item">
+        <div class="appointment-time">
+          <div class="time">⚠️</div>
+        </div>
+        <div class="appointment-details">
+          <h4>Erreur</h4>
+          <p>Impossible de charger vos rendez-vous</p>
+        </div>
+      </div>`;
   }
 }
 
@@ -158,7 +232,6 @@ function fillStats(stats = {}) {
   setText('stat-months', stats.months_post_greffe ?? '—');
   setText('stat-rdv', stats.rdv_count ?? '0');
   setText('stat-questionnaires', stats.questionnaires_en_attente ?? '0');
-  setText('stat-messages', stats.messages_non_lus ?? '0');
 }
 
 function fillInfos(info = {}) {

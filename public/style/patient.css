@@ -239,6 +239,20 @@ a {
   font-size: 0.9rem;
 }
 
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--green);
+}
+
 /* Dashboard stats */
 .stats-grid {
   display: grid;
@@ -1342,6 +1356,16 @@ a {
 .appointment-actions .btn-action:hover {
   background: var(--green);
   color: #fff;
+}
+
+.appointment-actions .btn-action.btn-disabled,
+.appointment-actions .btn-action:disabled {
+  background: #f3f4f6;
+  border-color: #cfd3d7;
+  color: #9aa0a6;
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.8;
 }
 
 .btn-cancel {

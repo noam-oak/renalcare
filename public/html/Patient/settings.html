@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paramètres - Espace Patient</title>
+    <link rel="stylesheet" href="../../style/patient.css">
+    <script src="/js/sidebar.js" defer></script>
+    <script src="/js/patient-settings.js" defer></script>
+</head>
+<body>
+    <div class="dashboard">
+        <div data-sidebar="patient" data-active="settings"></div>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <h1>Paramètres du compte</h1>
+                    <p>Informations personnelles et préférences</p>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="card" id="settingsSummary">
+                    <div class="card-header">
+                        <h2>Résumé du compte</h2>
+                        <span id="settingsStatus" class="text-muted-foreground text-sm">Chargement...</span>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-box">
+                            <div class="info-label">Nom complet</div>
+                            <div class="info-value" id="personalName">-</div>
+                        </div>
+                        <div class="info-box">
+                            <div class="info-label">Email</div>
+                            <div class="info-value" id="personalEmail">-</div>
+                        </div>
+                        <div class="info-box">
+                            <div class="info-label">Rôle</div>
+                            <div class="info-value" id="personalRole">Patient</div>
+                        </div>
+                        <div class="info-box">
+                            <div class="info-label">ID utilisateur</div>
+                            <div class="info-value" id="personalId">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="two-column">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Informations personnelles</h2>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Date de naissance</div>
+                                <div class="info-value" id="birthDate">Non renseignée</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Téléphone</div>
+                                <div class="info-value" id="phone">Non renseigné</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Adresse</div>
+                                <div class="info-value" id="address">Non renseignée</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Sécurité sociale</div>
+                                <div class="info-value" id="secu">Non renseignée</div>
+                            </div>
+                        </div>
+                        <p class="text-muted-foreground text-sm" style="margin-top: 10px;">Ces champs se remplissent automatiquement depuis votre profil. Pour toute mise à jour, contactez votre équipe médicale.</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Médecin référent</h2>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Nom</div>
+                                <div class="info-value" id="doctorName">Aucun médecin assigné</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Email</div>
+                                <div class="info-value" id="doctorEmail">-</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Dernier bilan</div>
+                                <div class="info-value" id="lastBilan">Non disponible</div>
+                            </div>
+                        </div>
+                        <p class="text-muted-foreground text-sm" style="margin-top: 10px;">Ces informations sont synchronisées depuis votre dossier patient.</p>
+                    </div>
+                </div>
+
+                <div class="two-column">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Données médicales</h2>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Groupe sanguin</div>
+                                <div class="info-value" id="bloodGroup">Non renseigné</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Date de greffe</div>
+                                <div class="info-value" id="greffeDate">Non renseignée</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Dossier médical</div>
+                                <div class="info-value" id="dossierId">Non disponible</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Préférences</h2>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Alertes critiques</div>
+                                <div class="info-value">
+                                    <label class="toggle">
+                                        <input type="checkbox" id="prefAlerts">
+                                        <span>Activer</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Email</div>
+                                <div class="info-value">
+                                    <label class="toggle">
+                                        <input type="checkbox" id="prefEmail">
+                                        <span>Recevoir par email</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">SMS</div>
+                                <div class="info-value">
+                                    <label class="toggle">
+                                        <input type="checkbox" id="prefSms">
+                                        <span>Recevoir par SMS</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-muted-foreground text-sm" style="margin-top: 10px;">Ces préférences sont enregistrées localement sur cet appareil.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

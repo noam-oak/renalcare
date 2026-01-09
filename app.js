@@ -60,6 +60,7 @@ const htmlRoutes = [
   { paths: ['/patient/dashboard'], file: 'Patient/patient-dashboard.html' },
   { paths: ['/patient/login'], file: 'Patient/patient-login.html' },
   { paths: ['/patient/register'], file: 'Patient/patient-inscription.html' },
+  { paths: ['/patient/settings'], file: 'Patient/settings.html' },
   {
     paths: ['/contact', '/patient/contact', '/medecin/contact'],
     file: 'contact-infirmier.html',
