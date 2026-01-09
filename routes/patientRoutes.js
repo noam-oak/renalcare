@@ -23,6 +23,24 @@ const authenticatePatient = (req, res, next) => {
   next();
 };
 
+// Récupère l'id patient depuis le token Bearer (valeur numérique), le middleware ou le query param user_id
+function resolvePatientIdFromRequest(req) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const tokenId = parseInt(authHeader.substring(7), 10);
+    if (!Number.isNaN(tokenId)) {
+      return tokenId;
+    }
+  }
+
+  if (req.user?.id) return req.user.id;
+
+  const queryId = parseInt(req.query.user_id, 10);
+  if (!Number.isNaN(queryId)) return queryId;
+
+  return null;
+}
+
 router.get('/:id/profile', async (req, res) => {
   try {
     const { data, error } = await supabaseAdmin
@@ -659,7 +677,7 @@ router.get('/appointments/all', async (req, res) => {
 // Get upcoming appointments
 router.get('/appointments/upcoming', async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.user_id;
+    const userId = resolvePatientIdFromRequest(req);
 
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Utilisateur non identifié' });
@@ -706,7 +724,7 @@ router.get('/appointments/upcoming', async (req, res) => {
 // Get past appointments
 router.get('/appointments/past', async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.user_id;
+    const userId = resolvePatientIdFromRequest(req);
 
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Utilisateur non identifié' });
@@ -752,7 +770,7 @@ router.get('/appointments/past', async (req, res) => {
 // Get single appointment by ID
 router.get('/appointments/:id', async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.user_id;
+    const userId = resolvePatientIdFromRequest(req);
     const appointmentId = req.params.id;
 
     if (!userId) {
