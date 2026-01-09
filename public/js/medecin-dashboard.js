@@ -588,7 +588,6 @@ function renderManagePatientsList() {
           <button class="btn-primary" style="padding:6px 10px;" onclick="goToSuiviPatient('${patient.id}', '${label}')">📊 Suivre</button>
           <button class="btn-primary" style="padding:6px 10px;" onclick="goToRdvPatient('${patient.id}', '${label}')">📅 RDV</button>
           <button class="btn-primary" style="padding:6px 10px;" onclick="goToOrdonnancePatient('${patient.id}', '${label}')">💊 Ordonnance</button>
-          <button class="btn-primary" style="padding:6px 10px;" onclick="goToMessageriePatient('${patient.id}', '${label}')">💬 Messagerie</button>
         </div>
       </div>
     `;
