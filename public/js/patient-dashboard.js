@@ -86,6 +86,7 @@ async function loadPatientDashboard() {
 
 async function loadUpcomingAppointments(token) {
   const container = document.getElementById('upcomingAppointments');
+  const statRdv = document.getElementById('stat-rdv');
   if (!container) return;
 
   container.innerHTML = `
@@ -110,6 +111,7 @@ async function loadUpcomingAppointments(token) {
     }
 
     const rdvs = data.appointments || [];
+    if (statRdv) statRdv.textContent = rdvs.length;
     if (!rdvs.length) {
       container.innerHTML = `
         <div class="appointment-item">
@@ -145,6 +147,7 @@ async function loadUpcomingAppointments(token) {
     }).join('');
   } catch (err) {
     console.error('RDV patient:', err);
+    if (statRdv) statRdv.textContent = '—';
     container.innerHTML = `
       <div class="appointment-item">
         <div class="appointment-time">
